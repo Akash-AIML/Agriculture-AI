@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed": "#2e1500",
+              "surface-container-high": "#e3eade",
+              "surface-variant": "#dee5d8",
+              "on-surface": "#171d16",
+              "on-secondary": "#ffffff",
+              "on-tertiary-container": "#ffeee3",
+              "on-primary-fixed": "#00210a",
+              "on-error": "#ffffff",
+              "on-secondary-fixed": "#2d150d",
+              "background": "#f5fcef",
+              "primary": "#315f3b",
+              "on-tertiary": "#ffffff",
+              "tertiary-container": "#91643c",
+              "inverse-on-surface": "#ecf3e6",
+              "inverse-surface": "#2b322a",
+              "secondary-container": "#fed0c1",
+              "secondary-fixed-dim": "#e9bdae",
+              "on-surface-variant": "#40493d",
+              "surface-container-low": "#eff6e9",
+              "surface-tint": "#3a6843",
+              "tertiary-fixed-dim": "#f3bb8d",
+              "error-container": "#ffdad6",
+              "surface-container": "#e9f0e4",
+              "on-error-container": "#93000a",
+              "primary-fixed": "#bcefc0",
+              "on-primary-fixed-variant": "#22502d",
+              "outline-variant": "#bfcaba",
+              "tertiary": "#754c27",
+              "on-background": "#171d16",
+              "primary-container": "#497851",
+              "on-secondary-fixed-variant": "#5e3f35",
+              "surface-container-highest": "#dee5d8",
+              "surface": "#f5fcef",
+              "tertiary-fixed": "#ffdcc1",
+              "inverse-primary": "#a0d3a5",
+              "error": "#ba1a1a",
+              "surface-bright": "#f5fcef",
+              "on-tertiary-fixed-variant": "#643e1a",
+              "secondary": "#79564b",
+              "on-primary-container": "#cafece",
+              "outline": "#707a6c",
+              "surface-dim": "#d5dcd0",
+              "on-primary": "#ffffff",
+              "surface-container-lowest": "#ffffff",
+              "secondary-fixed": "#ffdbcf",
+              "primary-fixed-dim": "#a0d3a5",
+              "on-secondary-container": "#79574c"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-effect {
+        background: rgba(58, 104, 67, 0.08);
+        backdrop-filter: blur(20px);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-[#f5fcef] dark:bg-[#10140f] flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#315f3b] dark:text-[#b1d1af]" data-icon="language">language</span>
+<span class="font-['Manrope'] font-black text-2xl text-[#315f3b] dark:text-[#b1d1af]">The Ledger</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-[#dee5d8] dark:hover:bg-[#2d352c] transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-[#315f3b] dark:text-[#b1d1af]" data-icon="dark_mode">dark_mode</span>
+</button>
+</div>
+</header>
+<main class="max-w-5xl mx-auto px-6 pt-8">
+<!-- Editorial Header -->
+<section class="mb-12">
+<span class="font-label text-[10px] font-medium uppercase tracking-[0.2em] text-primary mb-2 block">Diagnostic Intelligence</span>
+<h1 class="font-headline font-extrabold text-5xl md:text-6xl tracking-tight text-on-surface leading-[1.1]">
+                Precision Analysis <br/>
+<span class="text-primary-container">of the Living Land.</span>
+</h1>
+<div class="mt-8 flex flex-col md:flex-row gap-8 items-start">
+<p class="max-w-xl text-on-surface-variant text-lg leading-relaxed">
+                    By leveraging high-resolution visual diagnostics, we transform raw imagery into actionable agronomic data. Detect early-stage fungal pathogens, evaluate soil organic matter, and optimize fertilizer application through our advanced neural recognition engine.
+                </p>
+<div class="hidden md:block w-px h-24 bg-outline-variant/30"></div>
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2 text-primary font-bold">
+<span class="material-symbols-outlined text-sm" data-icon="verified">verified</span>
+<span class="text-sm font-label uppercase tracking-wider">98.4% Accuracy</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="timer">timer</span>
+<span class="text-sm">Real-time processing</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Analysis Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Upload Soil Image Card -->
+<div class="group relative overflow-hidden rounded-xl bg-surface-container-low p-6 transition-all duration-300 hover:bg-surface-container">
+<div class="flex justify-between items-start mb-12">
+<div class="space-y-1">
+<h2 class="font-headline font-bold text-2xl text-on-surface">Upload Soil Image</h2>
+<p class="text-sm text-on-surface-variant">Analyze composition &amp; pH balance</p>
+</div>
+<div class="flex gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-highest text-primary hover:bg-primary hover:text-white transition-all active:scale-90">
+<span class="material-symbols-outlined" data-icon="photo_camera">photo_camera</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-highest text-primary hover:bg-primary hover:text-white transition-all active:scale-90">
+<span class="material-symbols-outlined" data-icon="gallery_thumbnail">gallery_thumbnail</span>
+</button>
+</div>
+</div>
+<div class="relative w-full aspect-video rounded-lg overflow-hidden mb-4">
+<img alt="Soil Texture" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Close-up of rich dark fertile soil texture with subtle moisture and organic debris under bright daylight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBP1lLqunmva5MCA6h74BdI13ARQS5b8NOtbTt18uhHFTusJGRFbSlw4g2F0x03O8ApcP4RkJd3V_PEmmPXvtHreuZhtL8fG3m9ZqSSk2-QQ4JKAZ2UCZ4iK4X3TmhCqmC1cTHX84WDzGZBCzknyYImalL9pGRH7OpShnlw5wYBm9YY9HRpTOY_px2fCpUWtn9CJTDVdOK-UbE59zolotLWomYdQCaGDslpVF-_sWtu3QL_kSQyYw1FwJTM3FXD4d9VWaSQZqMRFfVt"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/40 to-transparent"></div>
+<div class="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 glass-effect rounded-full">
+<span class="material-symbols-outlined text-white text-sm" data-icon="monitoring">monitoring</span>
+<span class="text-white text-[10px] font-label font-bold tracking-widest uppercase">Sample Scan Ready</span>
+</div>
+</div>
+<button class="w-full py-4 rounded-full bg-gradient-to-br from-[#315f3b] to-[#497851] text-white font-headline font-bold text-sm tracking-wide active:scale-[0.98] transition-all duration-200">
+                    START SOIL SCAN
+                </button>
+</div>
+<!-- Upload Crop Disease Image Card -->
+<div class="group relative overflow-hidden rounded-xl bg-surface-container-low p-6 transition-all duration-300 hover:bg-surface-container">
+<div class="flex justify-between items-start mb-12">
+<div class="space-y-1">
+<h2 class="font-headline font-bold text-2xl text-on-surface">Upload Crop Disease</h2>
+<p class="text-sm text-on-surface-variant">Identify pathogens &amp; pests</p>
+</div>
+<div class="flex gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-highest text-primary hover:bg-primary hover:text-white transition-all active:scale-90">
+<span class="material-symbols-outlined" data-icon="camera">camera</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-highest text-primary hover:bg-primary hover:text-white transition-all active:scale-90">
+<span class="material-symbols-outlined" data-icon="image">image</span>
+</button>
+</div>
+</div>
+<div class="relative w-full aspect-video rounded-lg overflow-hidden mb-4">
+<img alt="Infected Leaf" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Detailed macro view of a green leaf with yellowish fungal spots and lesions against a soft blurred garden background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFsKisrN5v78LONxynV2nMTrKbZV8JASn_gxmCVx0WmksPb7lafiH1xPW0mUjaLdZsPo_UtOoMQXUcREMMFDENXl6txjgkbjeR-psnrLCQ17Rlb-mK6gaF-ppYtdje9VeLULqr6bSxeidk5sEP0LOcl83fEOHxremKaW8TyfYWKAmetbnNfmF2uBMYGyF190zXA0puWv2g7hazAItBIOJXl_YcVL6mjwket7NT9itF1ObiycKkY0jyML10eSfOZ2bUge4vLuYoFbxc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/40 to-transparent"></div>
+<div class="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 glass-effect rounded-full">
+<span class="material-symbols-outlined text-white text-sm" data-icon="biotech">biotech</span>
+<span class="text-white text-[10px] font-label font-bold tracking-widest uppercase">Detection Active</span>
+</div>
+</div>
+<button class="w-full py-4 rounded-full bg-gradient-to-br from-[#315f3b] to-[#497851] text-white font-headline font-bold text-sm tracking-wide active:scale-[0.98] transition-all duration-200">
+                    DIAGNOSE CROP
+                </button>
+</div>
+</div>
+<!-- Asymmetric Detail Section -->
+<section class="mt-20 flex flex-col md:flex-row gap-12 items-center">
+<div class="w-full md:w-1/2 rounded-xl overflow-hidden bg-surface-container aspect-square relative">
+<img class="w-full h-full object-cover opacity-80" data-alt="Modern robotic agricultural arm in a greenhouse scanning plants with laser precision under soft diffused lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBG4IHnjXeA7_7sZxefdV0Qir2DQjtmMJwQ-r6DphgV-fjmHacbpGluUshmxFt8nMFTsLI-bNlmG4RWVHN9juO1KhKr0asEIOq_q5VTpKDnPH-JCzyRe9IIKLszaN2kbYer5pBehGeomC4GgG2UyTK2eBMFoNT0wiUTwvQw5zC3uWvq1Pa3m2XtH29dpo3pgzkWgQht-r3kxjqrw-tUSJ_K6bHBlYGyC-sPTmI8DVe2CXrB3lB8-yfMgXsGL67ncjC_k01a3_tftdl9"/>
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent"></div>
+</div>
+<div class="w-full md:w-1/2 space-y-6">
+<h3 class="font-headline font-bold text-3xl text-on-surface">Why Computer Vision?</h3>
+<div class="space-y-4">
+<div class="p-4 bg-surface-container rounded-xl">
+<h4 class="font-headline font-bold text-primary mb-1">Early Mitigation</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Catch fungal blooms up to 4 days before they are visible to the untrained human eye, reducing yield loss by 30%.</p>
+</div>
+<div class="p-4 bg-surface-container rounded-xl">
+<h4 class="font-headline font-bold text-primary mb-1">Resource Efficiency</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Determine precise nitrogen and phosphorus needs based on soil colorimetry, stopping over-fertilization.</p>
+</div>
+<div class="p-4 bg-surface-container rounded-xl">
+<h4 class="font-headline font-bold text-primary mb-1">Historical Tracking</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Every image builds a seasonal timeline, allowing for predictive modeling of future crop cycles.</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#f5fcef]/80 dark:bg-[#10140f]/80 backdrop-blur-xl z-50 rounded-t-3xl border-t border-[#bfcaba]/15 shadow-[0_-4px_24px_rgba(23,29,22,0.06)]">
+<a class="flex flex-col items-center justify-center text-[#707a6c] dark:text-[#8a9385] p-2 hover:text-[#315f3b] dark:hover:text-white transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-[0.05em]">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#315f3b] to-[#497851] text-white rounded-full px-5 py-2 active:scale-[0.98] transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="analytics">analytics</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-[0.05em]">Analysis</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#707a6c] dark:text-[#8a9385] p-2 hover:text-[#315f3b] dark:hover:text-white transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="science">science</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-[0.05em]">Fertilizer</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#707a6c] dark:text-[#8a9385] p-2 hover:text-[#315f3b] dark:hover:text-white transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="smart_toy">smart_toy</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-[0.05em]">AI Chat</span>
+</a>
+</nav>
+</body></html>
