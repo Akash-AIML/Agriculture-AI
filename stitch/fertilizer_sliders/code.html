@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Ledger - Fertilizer Recommendation Tool</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed": "#2e1500",
+              "surface-container-high": "#e3eade",
+              "surface-variant": "#dee5d8",
+              "on-surface": "#171d16",
+              "on-secondary": "#ffffff",
+              "on-tertiary-container": "#ffeee3",
+              "on-primary-fixed": "#00210a",
+              "on-error": "#ffffff",
+              "on-secondary-fixed": "#2d150d",
+              "background": "#f5fcef",
+              "primary": "#315f3b",
+              "on-tertiary": "#ffffff",
+              "tertiary-container": "#91643c",
+              "inverse-on-surface": "#ecf3e6",
+              "inverse-surface": "#2b322a",
+              "secondary-container": "#fed0c1",
+              "secondary-fixed-dim": "#e9bdae",
+              "on-surface-variant": "#40493d",
+              "surface-container-low": "#eff6e9",
+              "surface-tint": "#3a6843",
+              "tertiary-fixed-dim": "#f3bb8d",
+              "error-container": "#ffdad6",
+              "surface-container": "#e9f0e4",
+              "on-error-container": "#93000a",
+              "primary-fixed": "#bcefc0",
+              "on-primary-fixed-variant": "#22502d",
+              "outline-variant": "#bfcaba",
+              "tertiary": "#754c27",
+              "on-background": "#171d16",
+              "primary-container": "#497851",
+              "on-secondary-fixed-variant": "#5e3f35",
+              "surface-container-highest": "#dee5d8",
+              "surface": "#f5fcef",
+              "tertiary-fixed": "#ffdcc1",
+              "inverse-primary": "#a0d3a5",
+              "error": "#ba1a1a",
+              "surface-bright": "#f5fcef",
+              "on-tertiary-fixed-variant": "#643e1a",
+              "secondary": "#79564b",
+              "on-primary-container": "#cafece",
+              "outline": "#707a6c",
+              "surface-dim": "#d5dcd0",
+              "on-primary": "#ffffff",
+              "surface-container-lowest": "#ffffff",
+              "secondary-fixed": "#ffdbcf",
+              "primary-fixed-dim": "#a0d3a5",
+              "on-secondary-container": "#79574c"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      input[type='range'] {
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+      }
+      input[type='range']::-webkit-slider-runnable-track {
+        background: #bfcaba33;
+        height: 8px;
+        border-radius: 4px;
+      }
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        margin-top: -8px;
+        background-color: #315f3b;
+        height: 24px;
+        width: 24px;
+        border-radius: 50%;
+        border: 4px solid #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-[#f5fcef] dark:bg-[#10140f]">
+<div class="flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#315f3b] dark:text-[#b1d1af]" data-icon="language">language</span>
+<h1 class="font-['Manrope'] font-black text-2xl text-[#315f3b] dark:text-[#b1d1af]">The Ledger</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-[#dee5d8] dark:hover:bg-[#2d352c] transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-[#707a6c] dark:text-[#8a9385]" data-icon="dark_mode">dark_mode</span>
+</button>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-6 pt-8 pb-32">
+<!-- Editorial Header Section -->
+<section class="mb-12">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="max-w-2xl">
+<p class="font-label text-primary font-bold tracking-[0.05em] uppercase text-xs mb-2">Technical Analysis</p>
+<h2 class="font-headline font-extrabold text-5xl tracking-tight text-on-surface">Fertilizer <span class="text-primary italic">Optimization</span></h2>
+<p class="mt-4 text-on-surface-variant text-lg leading-relaxed">Adjust your soil parameters and environmental conditions below to receive a high-precision chemical recommendation tailored for your current harvest cycle.</p>
+</div>
+<div class="hidden md:block">
+<div class="bg-surface-container-high p-4 rounded-xl flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="agriculture">agriculture</span>
+</div>
+<div>
+<p class="text-[10px] font-bold uppercase tracking-wider text-outline">Location Status</p>
+<p class="font-bold text-on-surface">Central Plains, Sector 7</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Interaction Area: Asymmetric Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Parameters Column -->
+<div class="lg:col-span-7 space-y-6">
+<!-- Macronutrients Card -->
+<div class="bg-surface-container rounded-full p-8">
+<h3 class="font-headline font-bold text-xl mb-8 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="science">science</span>
+                        Macronutrient Levels (NPK)
+                    </h3>
+<div class="space-y-10">
+<!-- Nitrogen -->
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<label class="font-bold text-on-surface-variant">Nitrogen (N)</label>
+<span class="bg-surface-container-highest px-4 py-1 rounded-full font-mono font-bold text-primary">85 mg/kg</span>
+</div>
+<input class="w-full" max="150" min="0" type="range" value="85"/>
+</div>
+<!-- Phosphorous -->
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<label class="font-bold text-on-surface-variant">Phosphorous (P)</label>
+<span class="bg-surface-container-highest px-4 py-1 rounded-full font-mono font-bold text-primary">42 mg/kg</span>
+</div>
+<input class="w-full" max="150" min="0" type="range" value="42"/>
+</div>
+<!-- Potassium -->
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<label class="font-bold text-on-surface-variant">Potassium (K)</label>
+<span class="bg-surface-container-highest px-4 py-1 rounded-full font-mono font-bold text-primary">38 mg/kg</span>
+</div>
+<input class="w-full" max="150" min="0" type="range" value="38"/>
+</div>
+</div>
+</div>
+<!-- Environment Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Soil pH (Special Treatment) -->
+<div class="bg-surface-container-low p-6 rounded-full border border-outline-variant/15">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-tertiary" data-icon="opacity">opacity</span>
+<p class="font-bold uppercase text-[10px] tracking-widest text-outline">Soil Acidity</p>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-4xl font-headline font-black text-on-surface mb-2">6.5</span>
+<p class="text-xs text-on-surface-variant font-medium mb-6">Slightly Acidic (Optimal)</p>
+<input class="w-full" max="14" min="0" step="0.1" type="range" value="6.5"/>
+</div>
+</div>
+<!-- Rainfall -->
+<div class="bg-surface-container p-6 rounded-full">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary" data-icon="rainy">rainy</span>
+<p class="font-bold uppercase text-[10px] tracking-widest text-outline">Annual Rainfall</p>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-4xl font-headline font-black text-on-surface mb-2">204 <span class="text-lg font-normal text-outline">mm</span></span>
+<input class="w-full mt-4" max="500" min="0" type="range" value="204"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Widgets & Results -->
+<div class="lg:col-span-5 space-y-6">
+<!-- Weather & Humidity Modules -->
+<div class="bg-surface-container-highest p-8 rounded-full flex flex-col justify-between aspect-square lg:aspect-auto">
+<div>
+<h3 class="font-headline font-bold text-xl mb-2">Environmental Context</h3>
+<p class="text-on-surface-variant text-sm mb-8">Atmospheric conditions significantly impact nutrient uptake efficiency.</p>
+</div>
+<div class="space-y-8">
+<!-- Temp -->
+<div class="flex items-center gap-6">
+<div class="bg-white/40 p-3 rounded-xl backdrop-blur-sm">
+<span class="material-symbols-outlined text-tertiary" data-icon="thermostat">thermostat</span>
+</div>
+<div class="flex-1 space-y-2">
+<div class="flex justify-between">
+<span class="text-sm font-bold">Temperature</span>
+<span class="text-sm font-mono">24.5°C</span>
+</div>
+<input class="w-full" max="50" min="0" type="range" value="25"/>
+</div>
+</div>
+<!-- Humidity -->
+<div class="flex items-center gap-6">
+<div class="bg-white/40 p-3 rounded-xl backdrop-blur-sm">
+<span class="material-symbols-outlined text-primary-container" data-icon="humidity_mid">humidity_mid</span>
+</div>
+<div class="flex-1 space-y-2">
+<div class="flex justify-between">
+<span class="text-sm font-bold">Humidity</span>
+<span class="text-sm font-mono">82%</span>
+</div>
+<input class="w-full" max="100" min="0" type="range" value="82"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Recommended Fertilizer Result (The Anchor) -->
+<div class="relative overflow-hidden bg-gradient-to-br from-primary to-primary-container p-8 rounded-full shadow-2xl">
+<!-- Glassmorphism Overlay decoration -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-on-primary" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<p class="text-on-primary/80 font-bold uppercase text-xs tracking-widest">Recommended Formula</p>
+</div>
+<h4 class="font-headline font-black text-4xl text-white mb-2">Urea-Enhanced DAP</h4>
+<p class="text-on-primary/70 mb-8 leading-relaxed">Optimal for current soil nitrogen deficiency and high humidity conditions. Apply during morning dew for maximum solubility.</p>
+<div class="grid grid-cols-2 gap-4 mb-8">
+<div class="bg-white/10 backdrop-blur-md p-4 rounded-xl">
+<p class="text-[10px] text-white/60 font-bold uppercase tracking-tighter">Dosage</p>
+<p class="font-bold text-white text-lg">45kg / Hectare</p>
+</div>
+<div class="bg-white/10 backdrop-blur-md p-4 rounded-xl">
+<p class="text-[10px] text-white/60 font-bold uppercase tracking-tighter">Confidence</p>
+<p class="font-bold text-white text-lg">94%</p>
+</div>
+</div>
+<button class="w-full py-4 bg-white text-primary font-bold rounded-full hover:bg-surface-container-lowest transition-all active:scale-[0.98] duration-200">
+                            Add to Purchase Ledger
+                        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Growth Tracker Visualization (Signature Component) -->
+<section class="mt-16">
+<div class="bg-surface-container-low p-10 rounded-full">
+<div class="flex flex-col md:flex-row items-center justify-between gap-8">
+<div>
+<h3 class="font-headline font-bold text-2xl mb-2">Nutrient Absorption Projection</h3>
+<p class="text-on-surface-variant">Estimated plant growth trajectory based on selected fertilizer inputs.</p>
+</div>
+<div class="flex items-end gap-2 h-24">
+<!-- Custom Growth Tracker Dot Visualization -->
+<div class="w-3 bg-primary/20 rounded-full h-[20%]"></div>
+<div class="w-3 bg-primary/40 rounded-full h-[35%]"></div>
+<div class="w-3 bg-primary/60 rounded-full h-[55%]"></div>
+<div class="w-3 bg-primary/80 rounded-full h-[80%]"></div>
+<div class="w-3 bg-primary rounded-full h-[100%]"></div>
+<div class="w-3 bg-primary rounded-full h-[95%]"></div>
+<div class="w-3 bg-primary/80 rounded-full h-[75%]"></div>
+<div class="w-3 bg-primary/60 rounded-full h-[60%]"></div>
+<div class="w-3 bg-primary/40 rounded-full h-[40%]"></div>
+<div class="w-3 bg-primary/20 rounded-full h-[25%]"></div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#f5fcef]/80 dark:bg-[#10140f]/80 backdrop-blur-xl border-t border-[#bfcaba]/15 z-50 rounded-t-3xl shadow-[0_-4px_24px_rgba(23,29,22,0.06)]">
+<a class="flex flex-col items-center justify-center text-[#707a6c] dark:text-[#8a9385] p-2 hover:text-[#315f3b] dark:hover:text-white transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-[0.05em]">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#707a6c] dark:text-[#8a9385] p-2 hover:text-[#315f3b] dark:hover:text-white transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="analytics">analytics</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-[0.05em]">Analysis</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#315f3b] to-[#497851] text-white rounded-full px-5 py-2 active:scale-[0.98] transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="science" style="font-variation-settings: 'FILL' 1;">science</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-[0.05em]">Fertilizer</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#707a6c] dark:text-[#8a9385] p-2 hover:text-[#315f3b] dark:hover:text-white transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="smart_toy">smart_toy</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-[0.05em]">AI Chat</span>
+</a>
+</nav>
+<!-- Contextual FAB (Suppressing on specialized details screen according to rules, but keeping a 'Share' toggle as small secondary) -->
+<button class="fixed right-6 bottom-32 w-14 h-14 bg-surface-container-high text-primary rounded-full shadow-lg flex items-center justify-center hover:bg-surface-container-highest transition-all active:scale-95 duration-200 border border-outline-variant/10">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</button>
+</body></html>
