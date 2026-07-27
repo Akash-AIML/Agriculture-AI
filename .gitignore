@@ -44,6 +44,17 @@ dist/
 *.joblib
 *.pkl
 *.sav
+!backend/models/*.pth
+!backend/models/*.pkl
+!dataset/agri_ai_dataset/models/*.pth
+!dataset/agri_ai_dataset/models/*.pkl
+
+
+# Dataset images and raw data
+dataset/agri_ai_dataset/crop_recommendation/
+dataset/agri_ai_dataset/extra_classes/
+dataset/agri_ai_dataset/plant_disease/
+dataset/agri_ai_dataset/soil_classification/
 
 # Node / React / React Native
 node_modules/
