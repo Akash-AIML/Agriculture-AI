@@ -1,8 +1,8 @@
 """
-Hugging Face Space Unified Entrypoint (Frontend + Backend).
+Terra·AI Backend API + React Frontend.
 
-Serves the built React SPA from agriculture-ai-frontend/dist on '/'
-and the FastAPI AI pipeline endpoints on '/api/v1/*'.
+FastAPI handles all API requests at /api/v1/*
+Custom React Frontend is served at /
 """
 
 import os
@@ -22,7 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from main import app as fastapi_app
 
-# Serve React SPA static build if dist exists
+# Serve your custom React SPA static build on root '/'
 if frontend_dist.exists():
     assets_dir = frontend_dist / "assets"
     if assets_dir.exists():
@@ -33,7 +33,7 @@ if frontend_dist.exists():
         index_file = frontend_dist / "index.html"
         if index_file.exists():
             return FileResponse(str(index_file))
-        return {"message": "Terra·AI Frontend index.html not found"}
+        return {"message": "Terra·AI React Frontend index.html not found"}
 
     @fastapi_app.get("/{full_path:path}")
     async def serve_spa_routes(full_path: str):
@@ -49,13 +49,11 @@ if frontend_dist.exists():
             return FileResponse(str(index_file))
         return {"message": "Route not found"}
 
-# Create Gradio interface for HF Space SDK compatibility
-with gr.Blocks(title="Terra·AI — Agricultural Intelligence API") as demo:
-    gr.Markdown("# 🌿 Terra·AI Agricultural Intelligence Platform")
-    gr.Markdown("Full Multi-Model API + React Web UI Active.")
+# Internal Gradio block wrapper so Hugging Face SDK allocates 16 GB free RAM
+with gr.Blocks(title="Terra·AI API Backend") as demo:
+    gr.Markdown("# 🌿 Terra·AI API Backend Running")
 
-# Mount FastAPI app onto Gradio
-app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio")
+app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio_internal")
 
 if __name__ == "__main__":
     import uvicorn
