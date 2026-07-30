@@ -7,7 +7,6 @@ If torch or model file is absent, FallbackDiseaseModel is used for lightweight i
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 try:
     import torch
@@ -128,34 +127,38 @@ class DiseaseModel:
             self.model = self.model.float().to(self.device).eval()
 
     def predict(self, tensor=None) -> dict:
-        if self.model is None:
-            self.model = FallbackDiseaseModel()
-
-        if isinstance(self.model, FallbackDiseaseModel):
-            return self.model.predict(tensor)
-
-        if torch is None:
+        if self.model is None or isinstance(self.model, FallbackDiseaseModel) or torch is None:
             return FallbackDiseaseModel().predict(tensor)
 
-        with torch.no_grad():
-            logits = self.model(tensor.to(self.device))
-            probs  = torch.softmax(logits, dim=1)[0]
-            top3_prob, top3_idx = torch.topk(probs, k=min(3, self.num_classes))
+        if not isinstance(tensor, torch.Tensor):
+            try:
+                tensor = torch.from_numpy(tensor).float()
+            except Exception:
+                return FallbackDiseaseModel().predict(tensor)
 
-            top_name = DISEASE_CLASSES[top3_idx[0]] if top3_idx[0] < len(DISEASE_CLASSES) else f"class_{top3_idx[0]}"
-            top_conf = round(float(top3_prob[0]) * 100, 2)
-            is_healthy = "healthy" in top_name.lower()
+        try:
+            with torch.no_grad():
+                logits = self.model(tensor.to(self.device))
+                probs  = torch.softmax(logits, dim=1)[0]
+                top3_prob, top3_idx = torch.topk(probs, k=min(3, self.num_classes))
 
-            return {
-                "disease":     top_name.replace("___", " — ").replace("_", " "),
-                "confidence":  top_conf,
-                "is_healthy":  is_healthy,
-                "treatments":  [] if is_healthy else TREATMENTS.get(DISEASE_CLASSES[top3_idx[0]], ["Consult local agronomist"]),
-                "top3": [
-                    {
-                        "label":      (DISEASE_CLASSES[i] if i < len(DISEASE_CLASSES) else f"class_{i}").replace("___", " — ").replace("_", " "),
-                        "confidence": round(float(p) * 100, 2),
-                    }
-                    for p, i in zip(top3_prob.tolist(), top3_idx.tolist())
-                ],
-            }
+                top_name = DISEASE_CLASSES[top3_idx[0]] if top3_idx[0] < len(DISEASE_CLASSES) else f"class_{top3_idx[0]}"
+                top_conf = round(float(top3_prob[0]) * 100, 2)
+                is_healthy = "healthy" in top_name.lower()
+
+                return {
+                    "disease":     top_name.replace("___", " — ").replace("_", " "),
+                    "confidence":  top_conf,
+                    "is_healthy":  is_healthy,
+                    "treatments":  [] if is_healthy else TREATMENTS.get(DISEASE_CLASSES[top3_idx[0]], ["Consult local agronomist"]),
+                    "top3": [
+                        {
+                            "label":      (DISEASE_CLASSES[i] if i < len(DISEASE_CLASSES) else f"class_{i}").replace("___", " — ").replace("_", " "),
+                            "confidence": round(float(p) * 100, 2),
+                        }
+                        for p, i in zip(top3_prob.tolist(), top3_idx.tolist())
+                    ],
+                }
+        except Exception as exc:
+            logger.warning("PyTorch disease inference failed (%s). Returning fallback prediction.", exc)
+            return FallbackDiseaseModel().predict(tensor)
