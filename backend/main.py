@@ -7,6 +7,7 @@ Docs: http://localhost:8000/docs
 
 import logging
 import os
+from pathlib import Path
 
 # Disable TensorFlow to prevent Keras 3 compatibility issues in transformers
 os.environ["USE_TF"] = "0"
@@ -24,7 +25,6 @@ from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 load_dotenv(override=True)
@@ -41,6 +41,22 @@ from services.llm_service  import LLMService
 from utils.preprocessing   import preprocess_image
 from utils.cache           import cache
 from middleware.auth       import get_current_user, create_token_response, TokenResponse, User
+
+
+def safe_get_remote_address(request: Request) -> str:
+    """Extract client IP safely across proxy and serverless environments."""
+    if not request:
+        return "127.0.0.1"
+    x_forwarded_for = request.headers.get("x-forwarded-for")
+    if x_forwarded_for:
+        return x_forwarded_for.split(",")[0].strip()
+    x_real_ip = request.headers.get("x-real-ip")
+    if x_real_ip:
+        return x_real_ip.strip()
+    if getattr(request, "client", None) and getattr(request.client, "host", None):
+        return request.client.host
+    return "127.0.0.1"
+
 
 # ── App-level singletons ──────────────────────────────────────────────────────
 disease_model  : Optional[DiseaseModel] = None
@@ -70,7 +86,6 @@ async def lifespan(app: FastAPI):
         disease_model.load()
     except Exception as e:
         logger.error("Disease model load failed: %s", e)
-        disease_model = None
 
     soil_model = SoilModel(
         model_path  = os.getenv("SOIL_MODEL_PATH") or str(base_dir / "models/soil_model.pth"),
@@ -80,7 +95,6 @@ async def lifespan(app: FastAPI):
         soil_model.load()
     except Exception as e:
         logger.error("Soil model load failed: %s", e)
-        soil_model = None
 
     crop_model_obj = CropModel(
         model_path          = os.getenv("CROP_MODEL_PATH") or str(base_dir / "models/crop_model.pkl"),
@@ -90,7 +104,6 @@ async def lifespan(app: FastAPI):
         crop_model_obj.load()
     except Exception as e:
         logger.error("Crop model load failed: %s", e)
-        crop_model_obj = None
 
     # ── RAG ──────────────────────────────────────────────────────────────────
     rag_service = RAGService(docs_dir=os.getenv("RAG_DOCS_DIR", "./rag_docs"))
@@ -112,7 +125,7 @@ async def lifespan(app: FastAPI):
 
 
 # ── FastAPI app ───────────────────────────────────────────────────────────────
-limiter = Limiter(key_func=get_remote_address, default_limits=[RATE_LIMIT])
+limiter = Limiter(key_func=safe_get_remote_address, default_limits=[RATE_LIMIT])
 app     = FastAPI(
     title       = "AgroSense AI API",
     description = "Multi-model agricultural AI: disease detection, soil analysis, crop recommendation, LLM advice.",
@@ -143,39 +156,45 @@ else:
     )
 
 
-# ── Schemas ───────────────────────────────────────────────────────────────────
+# ── Request / Response Schemas ────────────────────────────────────────────────
 class CropInput(BaseModel):
-    N:           float = Field(..., ge=0, le=200, description="Nitrogen (kg/ha)")
-    P:           float = Field(..., ge=0, le=200, description="Phosphorus (kg/ha)")
-    K:           float = Field(..., ge=0, le=200, description="Potassium (kg/ha)")
-    temperature: float = Field(..., ge=0, le=50,  description="°C")
-    humidity:    float = Field(..., ge=0, le=100, description="%")
-    ph:          float = Field(..., ge=0, le=14,  description="Soil pH")
-    rainfall:    float = Field(..., ge=0, le=3000,description="mm per year")
-    language:    str   = Field("en", pattern="^(en|ta|hi|te)$")
+    N: float = Field(..., ge=0, le=140, description="Nitrogen content (mg/kg)")
+    P: float = Field(..., ge=0, le=145, description="Phosphorus content (mg/kg)")
+    K: float = Field(..., ge=0, le=205, description="Potassium content (mg/kg)")
+    temperature: float = Field(..., ge=8.0, le=45.0, description="Temperature in °C")
+    humidity: float = Field(..., ge=14.0, le=100.0, description="Relative humidity %")
+    ph: float = Field(..., ge=3.5, le=10.0, description="Soil pH level")
+    rainfall: float = Field(..., ge=20.0, le=300.0, description="Rainfall in mm")
 
 
 class AdviceRequest(BaseModel):
-    disease_result: Optional[dict] = None
-    soil_result:    Optional[dict] = None
-    crop_result:    Optional[dict] = None
-    language:       str = Field("en", pattern="^(en|ta|hi|te)$")
-    stream:         bool = False
-    prompt:         Optional[str] = None
+    question: Optional[str] = Field(None, description="Optional custom question from user")
+    disease_result: Optional[dict] = Field(None, description="Output from /analyze/disease")
+    soil_result: Optional[dict] = Field(None, description="Output from /analyze/soil")
+    crop_result: Optional[list] = Field(None, description="Output from /recommend/crop")
+    language: str = Field("en", description="Response language: en | ta | hi | te")
 
 
-# ── Health ────────────────────────────────────────────────────────────────────
-@app.get("/api/v1/health", tags=["meta"])
-async def health():
+class HealthResponse(BaseModel):
+    status: str
+    version: str
+    models_loaded: dict[str, bool]
+    redis_connected: bool
+
+
+# ── Health check ──────────────────────────────────────────────────────────────
+@app.get("/health", response_model=HealthResponse, tags=["system"])
+@app.get("/api/v1/health", response_model=HealthResponse, tags=["system"])
+async def health_check():
     return {
-        "status": "ok",
-        "models": {
-            "disease": disease_model  is not None,
-            "soil":    soil_model     is not None,
-            "crop":    crop_model_obj is not None,
+        "status": "healthy",
+        "version": "1.0.0",
+        "models_loaded": {
+            "disease": disease_model is not None and getattr(disease_model, "model", None) is not None,
+            "soil":    soil_model is not None and getattr(soil_model, "model", None) is not None,
+            "crop":    crop_model_obj is not None and getattr(crop_model_obj, "model", None) is not None,
         },
-        "llm_ready": llm_service is not None,
-        "rag_ready": rag_service  is not None,
+        "redis_connected": cache._redis_url is not None and cache._backend is not None,
     }
 
 
@@ -193,7 +212,7 @@ async def analyze_disease(
     file    : UploadFile = File(..., description="Plant leaf image"),
     lang    : Optional[str] = Form("en"),
 ):
-    global disease_model, soil_model
+    global disease_model
     if disease_model is None:
         base_dir = Path(__file__).parent
         disease_model = DiseaseModel(model_path=str(base_dir / "models/disease_model_fp16.pth"))
@@ -208,11 +227,16 @@ async def analyze_disease(
         logger.info(f"File Size: {len(image_bytes)} | Hash: {cache_key}")
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        logger.exception("Preprocessing failed")
+        raise HTTPException(status_code=500, detail=f"Preprocessing error: {exc}")
 
-    # Cache check
-    cached = await cache.get(f"disease:{cache_key}")
-    if cached:
-        return {**cached, "cached": True}
+    try:
+        cached = await cache.get(f"disease:{cache_key}")
+        if cached and isinstance(cached, dict):
+            return {**cached, "cached": True}
+    except Exception as e:
+        logger.warning("Cache check skipped: %s", e)
 
     try:
         result = disease_model.predict(tensor)
@@ -220,7 +244,11 @@ async def analyze_disease(
         logger.exception("Disease inference failed")
         raise HTTPException(status_code=500, detail=f"Inference error: {exc}")
 
-    await cache.set(f"disease:{cache_key}", result, ttl=3600)
+    try:
+        await cache.set(f"disease:{cache_key}", result, ttl=3600)
+    except Exception as e:
+        logger.warning("Cache write skipped: %s", e)
+
     return {**result, "cached": False}
 
 
@@ -247,11 +275,16 @@ async def analyze_soil(
         logger.info(f"File Size: {len(image_bytes)} | Hash: {cache_key}")
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        logger.exception("Preprocessing failed")
+        raise HTTPException(status_code=500, detail=f"Preprocessing error: {exc}")
 
-    # Cache check
-    cached = await cache.get(f"soil:{cache_key}")
-    if cached:
-        return {**cached, "cached": True}
+    try:
+        cached = await cache.get(f"soil:{cache_key}")
+        if cached and isinstance(cached, dict):
+            return {**cached, "cached": True}
+    except Exception as e:
+        logger.warning("Cache check skipped: %s", e)
 
     try:
         result = soil_model.predict(tensor)
@@ -259,7 +292,11 @@ async def analyze_soil(
         logger.exception("Soil inference failed")
         raise HTTPException(status_code=500, detail=f"Inference error: {exc}")
 
-    await cache.set(f"soil:{cache_key}", result, ttl=3600)
+    try:
+        await cache.set(f"soil:{cache_key}", result, ttl=3600)
+    except Exception as e:
+        logger.warning("Cache write skipped: %s", e)
+
     return {**result, "cached": False}
 
 
@@ -270,82 +307,58 @@ async def recommend_crop(
     request : Request,
     data    : CropInput,
 ):
-    if not crop_model_obj:
-        raise HTTPException(status_code=503, detail="Crop model not loaded.")
+    global crop_model_obj
+    if crop_model_obj is None:
+        base_dir = Path(__file__).parent
+        crop_model_obj = CropModel(
+            model_path          = str(base_dir / "models/crop_model.pkl"),
+            label_encoder_path  = str(base_dir / "models/label_enoder_crop.pkl"),
+        )
+        crop_model_obj.load()
 
     cache_key = f"crop:{data.N}:{data.P}:{data.K}:{data.temperature}:{data.humidity}:{data.ph}:{data.rainfall}"
-    # Cache check
-    cached = await cache.get(cache_key)
-    if cached:
-        return {**cached, "cached": True}
+    try:
+        cached = await cache.get(cache_key)
+        if cached and isinstance(cached, dict):
+            return {**cached, "cached": True}
+    except Exception as e:
+        logger.warning("Cache check skipped: %s", e)
 
     try:
-        result = crop_model_obj.predict(
-            data.N, data.P, data.K,
-            data.temperature, data.humidity, data.ph, data.rainfall,
-        )
+        recs = crop_model_obj.predict(data.dict())
     except Exception as exc:
-        logger.exception("Crop inference failed")
+        logger.exception("Crop recommendation failed")
         raise HTTPException(status_code=500, detail=f"Inference error: {exc}")
 
-    await cache.set(cache_key, result, ttl=600)
+    result = {"recommendations": recs}
+    try:
+        await cache.set(cache_key, result, ttl=3600)
+    except Exception as e:
+        logger.warning("Cache write skipped: %s", e)
+
     return {**result, "cached": False}
 
 
-# ── Full analysis (disease + soil together) ───────────────────────────────────
-@app.post("/api/v1/analyze/full", tags=["models"])
-@limiter.limit(RATE_LIMIT)
-async def full_analysis(
-    request      : Request,
-    disease_image: Optional[UploadFile] = File(None),
-    soil_image   : Optional[UploadFile] = File(None),
-):
-    disease_result = soil_result = None
-
-    if disease_image:
-        img_bytes = await disease_image.read()
-        try:
-            tensor, _ = preprocess_image(img_bytes)
-            if disease_model:
-                disease_result = disease_model.predict(tensor)
-        except (ValueError, Exception) as e:
-            logger.warning("Disease inference skipped: %s", e)
-
-    if soil_image:
-        img_bytes = await soil_image.read()
-        try:
-            tensor, _ = preprocess_image(img_bytes)
-            if soil_model:
-                soil_result = soil_model.predict(tensor)
-        except (ValueError, Exception) as e:
-            logger.warning("Soil inference skipped: %s", e)
-
-    merged = orchestrator.merge(disease_result, soil_result)
-    return merged
-
-
-# ── LLM Advice ────────────────────────────────────────────────────────────────
+# ── Advice (Streaming RAG + LLM) ──────────────────────────────────────────────
 @app.post("/api/v1/advice", tags=["llm"])
-@limiter.limit("10/minute")
+@limiter.limit(RATE_LIMIT)
 async def get_advice(
-    request : Request,
-    body    : AdviceRequest,
+    request: Request,
+    payload: AdviceRequest,
 ):
     if not llm_service:
-        raise HTTPException(status_code=503, detail="LLM service not configured (missing OPENAI_API_KEY).")
+        async def mock_stream():
+            yield "data: [OPENAI_API_KEY is not configured in backend/.env. Demo mode active.]\n\n"
+            yield "data: [DONE]\n\n"
+        return StreamingResponse(mock_stream(), media_type="text/event-stream")
 
-    merged   = orchestrator.merge(body.disease_result, body.soil_result, body.crop_result)
-    context  = orchestrator.build_llm_context(merged, language=body.language)
-    passages = rag_service.retrieve(merged["summary"]) if rag_service else ""
-
-    if body.stream:
-        async def _stream():
-            async for chunk in llm_service.stream(context, passages, body.prompt):
-                yield chunk
-        return StreamingResponse(_stream(), media_type="text/plain")
-    else:
-        text = await llm_service.invoke(context, passages, body.prompt)
-        return {"advice": text}
-
-    advice = llm_service.generate(context, passages)
-    return {"advice": advice, "language": body.language, "summary": merged["summary"]}
+    try:
+        generator = orchestrator.stream_advice(
+            payload     = payload.dict(),
+            rag_service = rag_service,
+            llm_service = llm_service,
+        )
+        return StreamingResponse(generator, media_type="text/event-stream")
+    except Exception as exc:
+        logger.exception("Advice streaming failed")
+        raise HTTPException(status_code=500, detail=f"Orchestrator error: {exc}")
