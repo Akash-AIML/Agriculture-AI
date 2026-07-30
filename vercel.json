@@ -3,21 +3,10 @@
   "buildCommand": "cd agriculture-ai-frontend && npm install && npm run build",
   "outputDirectory": "agriculture-ai-frontend/dist",
   "framework": "vite",
-  "build": {
-    "env": {
-      "PYTHON_VERSION": "3.11",
-      "PYO3_USE_ABI3_FORWARD_COMPATIBILITY": "1"
-    }
-  },
-  "functions": {
-    "api/index.py": {
-      "excludeFiles": "agriculture-ai-frontend/**"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/v1/:path*",
-      "destination": "/api/index.py"
+      "destination": "https://agri-ai.agreeableocean-d133ab66.eastasia.azurecontainerapps.io/api/v1/:path*"
     },
     {
       "source": "/((?!api/).*)",
