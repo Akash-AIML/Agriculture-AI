@@ -99,7 +99,12 @@ export function CropTab() {
                 max={14}
                 step={0.1}
                 value={currentPh}
-                onChange={(e) => set("ph", Number(e.target.value))}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  if (Number.isFinite(val)) {
+                    set("ph", val);
+                  }
+                }}
                 className="w-full cursor-pointer accent-primary"
               />
               <div className="flex justify-between font-mono text-[9px] opacity-40">
@@ -136,18 +141,23 @@ export function CropTab() {
             ) : (
               safeCrops.map((c, i) => {
                 const cropName = String(c?.crop ?? "Crop");
-                const probVal =
-                  typeof c?.probability === "number" && !isNaN(c.probability)
+                const rawProb =
+                  typeof c?.probability === "number" && Number.isFinite(c.probability)
                     ? c.probability
                     : 0;
-                const pct = probVal > 1 ? probVal : Math.max(0, Math.min(1, probVal)) * 100;
+                const pct =
+                  rawProb > 1
+                    ? Math.min(100, Math.max(0, rawProb))
+                    : Math.min(100, Math.max(0, rawProb * 100));
+                const safePct = Number.isFinite(pct) ? pct : 0;
                 const initials = cropName.slice(0, 2).toUpperCase() || "CR";
+                const cardOpacity = Math.max(0.4, Math.min(1, 1 - i * 0.15));
 
                 return (
                   <div
                     key={`${cropName}-${i}`}
                     className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4"
-                    style={{ opacity: Math.max(0.4, 1 - i * 0.15) }}
+                    style={{ opacity: cardOpacity }}
                   >
                     <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-sage-soft font-bold italic text-primary">
                       {initials}
@@ -158,13 +168,13 @@ export function CropTab() {
                           {cropName}
                         </h5>
                         <span className="font-mono text-[11px] font-bold">
-                          {pct.toFixed(0)}% {t.match}
+                          {safePct.toFixed(0)}% {t.match}
                         </span>
                       </div>
                       <div className="h-1 w-full rounded-full bg-sage-soft">
                         <div
                           className="h-full rounded-full bg-primary transition-[width] duration-500"
-                          style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
+                          style={{ width: `${safePct}%` }}
                         />
                       </div>
                     </div>
@@ -201,8 +211,10 @@ function NumField({
         value={displayVal}
         step={step}
         onChange={(e) => {
-          const parsed = parseFloat(e.target.value);
-          onChange(Number.isFinite(parsed) ? parsed : 0);
+          const val = parseFloat(e.target.value);
+          if (Number.isFinite(val)) {
+            onChange(val);
+          }
         }}
         className="w-full rounded-xl border border-border bg-card px-3 py-2.5 font-mono text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20"
       />
