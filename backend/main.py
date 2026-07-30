@@ -32,15 +32,26 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(name)s | %(mes
 logger = logging.getLogger("agrosense")
 
 # ── Lazy imports (keep startup fast even if some deps missing) ────────────────
-from models.disease_model import DiseaseModel
-from models.soil_model     import SoilModel
-from models.crop_model     import CropModel
-from services.orchestrator import Orchestrator
-from services.rag_service  import RAGService
-from services.llm_service  import LLMService
-from utils.preprocessing   import preprocess_image
-from utils.cache           import cache
-from middleware.auth       import get_current_user, create_token_response, TokenResponse, User
+try:
+    from models.disease_model import DiseaseModel
+    from models.soil_model import SoilModel
+    from models.crop_model import CropModel
+    from services.orchestrator import Orchestrator
+    from services.rag_service import RAGService
+    from services.llm_service import LLMService
+    from utils.preprocessing import preprocess_image
+    from utils.cache import cache
+    from middleware.auth import get_current_user, create_token_response, TokenResponse, User
+except ImportError:
+    from backend.models.disease_model import DiseaseModel
+    from backend.models.soil_model import SoilModel
+    from backend.models.crop_model import CropModel
+    from backend.services.orchestrator import Orchestrator
+    from backend.services.rag_service import RAGService
+    from backend.services.llm_service import LLMService
+    from backend.utils.preprocessing import preprocess_image
+    from backend.utils.cache import cache
+    from backend.middleware.auth import get_current_user, create_token_response, TokenResponse, User
 
 
 def safe_get_remote_address(request: Request) -> str:

@@ -1,8 +1,15 @@
 import sys
 from pathlib import Path
 
-# Add backend directory to sys.path
-backend_dir = Path(__file__).parent.parent / "backend"
-sys.path.insert(0, str(backend_dir))
+# Add root and backend directory to sys.path
+root_dir = Path(__file__).resolve().parent.parent
+backend_dir = root_dir / "backend"
 
-from main import app  # noqa: E402
+for d in [str(root_dir), str(backend_dir)]:
+    if d not in sys.path:
+        sys.path.insert(0, d)
+
+try:
+    from main import app
+except Exception:
+    from backend.main import app  # noqa: F401
