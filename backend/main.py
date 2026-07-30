@@ -193,8 +193,11 @@ async def analyze_disease(
     file    : UploadFile = File(..., description="Plant leaf image"),
     lang    : Optional[str] = Form("en"),
 ):
-    if not disease_model:
-        raise HTTPException(status_code=503, detail="Disease model not loaded.")
+    global disease_model, soil_model
+    if disease_model is None:
+        base_dir = Path(__file__).parent
+        disease_model = DiseaseModel(model_path=str(base_dir / "models/disease_model_fp16.pth"))
+        disease_model.load()
 
     image_bytes = await file.read()
     if len(image_bytes) > 10 * 1024 * 1024:
@@ -229,8 +232,11 @@ async def analyze_soil(
     file    : UploadFile = File(..., description="Soil image"),
     lang    : Optional[str] = Form("en"),
 ):
-    if not soil_model:
-        raise HTTPException(status_code=503, detail="Soil model not loaded.")
+    global soil_model
+    if soil_model is None:
+        base_dir = Path(__file__).parent
+        soil_model = SoilModel(model_path=str(base_dir / "models/soil_model.pth"))
+        soil_model.load()
 
     image_bytes = await file.read()
     if len(image_bytes) > 10 * 1024 * 1024:
