@@ -1,10 +1,6 @@
 """
 Redis-backed cache with a thread-safe in-memory fallback.
-Usage:
-    cache = Cache()
-    await cache.connect()
-    await cache.set("key", "value", ttl=300)
-    val = await cache.get("key")
+Auto-initializes in-memory backend if connect() was not called (e.g. serverless environments).
 """
 
 import json
@@ -69,26 +65,46 @@ class Cache:
         self._backend = _MemoryBackend()
         logger.info("Cache: using in-memory backend.")
 
+    def _ensure_backend(self):
+        if self._backend is None:
+            self._backend = _MemoryBackend()
+
     async def get(self, key: str) -> Optional[Any]:
-        raw = await self._backend.get(key)
-        if raw is None:
-            return None
+        self._ensure_backend()
         try:
-            return json.loads(raw)
-        except json.JSONDecodeError:
-            return raw
+            raw = await self._backend.get(key)
+            if raw is None:
+                return None
+            try:
+                return json.loads(raw)
+            except (json.JSONDecodeError, TypeError):
+                return raw
+        except Exception as exc:
+            logger.warning("Cache get error: %s", exc)
+            return None
 
     async def set(self, key: str, value: Any, ttl: int = 300):
-        serialized = json.dumps(value) if not isinstance(value, str) else value
-        await self._backend.set(key, serialized, ttl)  # type: ignore[arg-type]
+        self._ensure_backend()
+        try:
+            serialized = json.dumps(value) if not isinstance(value, str) else value
+            await self._backend.set(key, serialized, ttl)
+        except Exception as exc:
+            logger.warning("Cache set error: %s", exc)
 
     async def delete(self, key: str):
-        await self._backend.delete(key)
+        self._ensure_backend()
+        try:
+            await self._backend.delete(key)
+        except Exception as exc:
+            logger.warning("Cache delete error: %s", exc)
 
     async def close(self):
         if self._backend:
-            await self._backend.close()
+            try:
+                await self._backend.close()
+            except Exception:
+                pass
 
 
-# Singleton used across the app (initialised in main.py lifespan)
+# Singleton used across the app
 cache: Cache = Cache()
