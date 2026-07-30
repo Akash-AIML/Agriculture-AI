@@ -18,7 +18,7 @@ const DEFAULTS: CropInput = {
 
 export function CropTab() {
   const { lang, crops, setCrops } = useAgri();
-  const t = TRANSLATIONS[lang].crop;
+  const t = TRANSLATIONS[lang]?.crop ?? TRANSLATIONS.en.crop;
   const [input, setInput] = useState<CropInput>(DEFAULTS);
   const [loading, setLoading] = useState(false);
 
@@ -35,8 +35,13 @@ export function CropTab() {
     }
   };
 
-  const set = (k: keyof CropInput, v: number) =>
-    setInput((s) => ({ ...s, [k]: Number.isFinite(v) ? v : 0 }));
+  const set = (k: keyof CropInput, v: number) => {
+    const val = Number.isFinite(v) ? v : 0;
+    setInput((s) => ({ ...s, [k]: val }));
+  };
+
+  const safeCrops = Array.isArray(crops) ? crops : [];
+  const currentPh = Number.isFinite(input.ph) ? input.ph : 6.5;
 
   return (
     <TabWrapper>
@@ -85,7 +90,7 @@ export function CropTab() {
                   {t.ph}
                 </label>
                 <span className="font-mono text-sm font-bold">
-                  {input.ph.toFixed(1)}
+                  {currentPh.toFixed(1)}
                 </span>
               </div>
               <input
@@ -93,7 +98,7 @@ export function CropTab() {
                 min={0}
                 max={14}
                 step={0.1}
-                value={input.ph}
+                value={currentPh}
                 onChange={(e) => set("ph", Number(e.target.value))}
                 className="w-full cursor-pointer accent-primary"
               />
@@ -124,19 +129,25 @@ export function CropTab() {
             <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/50">
               {t.ranked}
             </p>
-            {(crops ?? []).length === 0 ? (
+            {safeCrops.length === 0 ? (
               <div className="grid aspect-[4/3] place-items-center rounded-2xl border border-dashed border-border bg-card/50 p-6 text-center text-sm text-foreground/40">
                 —
               </div>
             ) : (
-              (crops ?? []).map((c, i) => {
-                const pct = Math.max(0, Math.min(1, c.probability)) * 100;
-                const initials = c.crop.slice(0, 2);
+              safeCrops.map((c, i) => {
+                const cropName = String(c?.crop ?? "Crop");
+                const probVal =
+                  typeof c?.probability === "number" && !isNaN(c.probability)
+                    ? c.probability
+                    : 0;
+                const pct = probVal > 1 ? probVal : Math.max(0, Math.min(1, probVal)) * 100;
+                const initials = cropName.slice(0, 2).toUpperCase() || "CR";
+
                 return (
                   <div
-                    key={c.crop + i}
+                    key={`${cropName}-${i}`}
                     className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4"
-                    style={{ opacity: 1 - i * 0.15 }}
+                    style={{ opacity: Math.max(0.4, 1 - i * 0.15) }}
                   >
                     <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-sage-soft font-bold italic text-primary">
                       {initials}
@@ -144,7 +155,7 @@ export function CropTab() {
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex items-end justify-between gap-2">
                         <h5 className="truncate text-sm font-bold capitalize">
-                          {c.crop}
+                          {cropName}
                         </h5>
                         <span className="font-mono text-[11px] font-bold">
                           {pct.toFixed(0)}% {t.match}
@@ -153,7 +164,7 @@ export function CropTab() {
                       <div className="h-1 w-full rounded-full bg-sage-soft">
                         <div
                           className="h-full rounded-full bg-primary transition-[width] duration-500"
-                          style={{ width: `${pct}%` }}
+                          style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
                         />
                       </div>
                     </div>
@@ -179,6 +190,7 @@ function NumField({
   onChange: (v: number) => void;
   step?: number;
 }) {
+  const displayVal = Number.isFinite(value) ? value : 0;
   return (
     <div className="min-w-0">
       <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest opacity-50">
@@ -186,9 +198,12 @@ function NumField({
       </label>
       <input
         type="number"
-        value={value}
+        value={displayVal}
         step={step}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(e) => {
+          const parsed = parseFloat(e.target.value);
+          onChange(Number.isFinite(parsed) ? parsed : 0);
+        }}
         className="w-full rounded-xl border border-border bg-card px-3 py-2.5 font-mono text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20"
       />
     </div>
