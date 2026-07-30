@@ -2,11 +2,10 @@
 Disease detection model wrapper (MobileNetV2 + Fallback).
 
 Your disease_model_fp16.pth is loaded and cast to float32 for CPU inference.
-If torch, model file, or Vercel serverless environment is detected, FallbackDiseaseModel is used for zero-crash execution.
+Runs real MobileNetV2 neural network predictions on PlantVillage 38-class dataset.
 """
 
 import logging
-import os
 from pathlib import Path
 
 try:
@@ -19,7 +18,6 @@ except ImportError:
     tv_models = None
 
 logger = logging.getLogger(__name__)
-IS_VERCEL = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
 
 # ── PlantVillage 38-class labels ─────────────────────────────────────────────
 DISEASE_CLASSES = [
@@ -87,8 +85,8 @@ class DiseaseModel:
         self.device = torch.device("cpu") if torch is not None else None
 
     def load(self):
-        if IS_VERCEL or torch is None or not self.model_path.exists():
-            logger.info("Using FallbackDiseaseModel.")
+        if torch is None or not self.model_path.exists():
+            logger.warning("PyTorch or disease_model.pth missing. Using FallbackDiseaseModel.")
             self.model = FallbackDiseaseModel()
             return
 
@@ -99,6 +97,7 @@ class DiseaseModel:
             if isinstance(obj, nn.Module):
                 self.model = obj
                 self._finalize()
+                logger.info("Disease model loaded as full Module.")
                 return
             state_dict = obj
         except Exception:
@@ -122,14 +121,14 @@ class DiseaseModel:
         missing, unexpected = net.load_state_dict(clean_state_dict, strict=False)
         self.model = net
         self._finalize()
-        logger.info("Disease model loaded via state_dict.")
+        logger.info("Disease model loaded via state_dict (MobileNetV2 backbone).")
 
     def _finalize(self):
         if self.model and hasattr(self.model, "float"):
             self.model = self.model.float().to(self.device).eval()
 
     def predict(self, tensor=None) -> dict:
-        if self.model is None or isinstance(self.model, FallbackDiseaseModel) or torch is None or IS_VERCEL:
+        if self.model is None or isinstance(self.model, FallbackDiseaseModel) or torch is None:
             return FallbackDiseaseModel().predict(tensor)
 
         if not isinstance(tensor, torch.Tensor):
