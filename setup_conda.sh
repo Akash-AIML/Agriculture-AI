@@ -56,8 +56,8 @@ else
 fi
 
 # Setup Frontend
-echo "🔧 Setting up frontend..."
-cd frontend
+echo "🔧 Setting up agriculture-ai-frontend..."
+cd agriculture-ai-frontend
 
 # Install Node.js dependencies if npm is available
 if command -v npm &> /dev/null; then
@@ -73,10 +73,10 @@ echo "✅ Setup complete!"
 echo ""
 echo "🚀 To start the application:"
 echo "1. Activate conda environment: conda activate ml"
-echo "2. Start backend: cd backend && python main.py"
-echo "3. Start frontend: cd frontend && npm start (if Node.js is available)"
+echo "2. Start backend: cd backend && uvicorn main:app --reload --host 0.0.0.0 --port 8000"
+echo "3. Start frontend: cd agriculture-ai-frontend && npm run dev (if Node.js is available)"
 echo ""
-echo "📱 Access the application at: http://localhost:3000"
+echo "📱 Access the frontend at: http://localhost:5173"
 echo "📚 API documentation at: http://localhost:8000/docs"
 echo ""
 echo "⚠️  Important:"

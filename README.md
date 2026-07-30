@@ -26,22 +26,24 @@ agri-ai/
 │   │   ├── preprocessing.py       # Image validation + transforms
 │   │   └── cache.py               # Redis cache with in-memory fallback
 │   └── rag_docs/                  # Drop .txt files here for RAG knowledge base
-└── frontend/
+└── agriculture-ai-frontend/
     ├── index.html
-    ├── vite.config.js
+    ├── vite.config.ts
     ├── package.json
     └── src/
-        ├── App.jsx                 # Root: header, tabs, language state
-        ├── index.css               # Full dark-earthy theme
-        ├── i18n/
-        │   └── translations.js     # EN / Tamil / Hindi / Telugu strings
-        └── components/
-            ├── DiseaseTab.jsx
-            ├── SoilTab.jsx
-            ├── CropTab.jsx
-            ├── AdviceTab.jsx       # Streaming LLM response
-            ├── ImageUpload.jsx
-            └── ConfidenceBar.jsx
+        ├── routes/                 # TanStack Router routes
+        ├── styles.css              # Styling
+        ├── lib/
+        │   ├── api.ts              # FastAPI integration & data mapping
+        │   ├── agri-store.ts       # Global state management
+        │   └── i18n.ts             # Translations
+        └── components/agri/
+            ├── DiseaseTab.tsx
+            ├── SoilTab.tsx
+            ├── CropTab.tsx
+            ├── AdviceTab.tsx
+            ├── ImageDrop.tsx
+            └── ConfidenceBar.tsx
 ```
 
 ---
@@ -57,23 +59,19 @@ ls ../dataset/agri_ai_dataset/models/
 # crop_model.pkl  disease_model_fp16.pth  label_enoder_crop.pkl  soil_model.pth
 ```
 
-### 2. Backend
+### 2. Backend (Global Python Environment)
 
 ```bash
 cd backend
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
-
-# Install dependencies
+# Install dependencies (using global Python environment)
 pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
 # Edit .env:
-#   - Set model paths (already match your existing paths)
-#   - Add your ANTHROPIC_API_KEY
+#   - Set model paths
+#   - Add your OPENAI_API_KEY / LLM keys
 #   - Optionally set REDIS_URL, JWT_SECRET_KEY
 
 # Start server
@@ -103,13 +101,13 @@ Destroy infected plant material immediately." > backend/rag_docs/tomato_diseases
 ### 4. Frontend
 
 ```bash
-cd frontend
+cd agriculture-ai-frontend
 
 npm install
 npm run dev
 
 # Opens at http://localhost:5173
-# API calls proxy to http://localhost:8000 via vite.config.js
+# API calls proxy to http://localhost:8000 via vite.config.ts / VITE_API_BASE_URL
 ```
 
 ---

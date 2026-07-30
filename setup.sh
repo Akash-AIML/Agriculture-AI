@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# AgriAI Assistant Setup Script
-# This script sets up the complete agricultural AI system
+# AgriAI Assistant Setup Script (Global Environment)
+# This script sets up the complete agricultural AI system using the current global environment
 
-echo "🌾 Setting up AgriAI Assistant..."
+echo "🌾 Setting up AgriAI Assistant (Global Environment)..."
 
 # Check Python version
 python_version=$(python3 --version 2>&1 | awk '{print $2}' | cut -d. -f1,2)
@@ -29,13 +29,8 @@ echo "✅ System requirements met"
 echo "🔧 Setting up backend..."
 cd backend
 
-# Create virtual environment
-echo "Creating virtual environment..."
-python3 -m venv venv
-source venv/bin/activate
-
-# Install Python dependencies
-echo "Installing Python dependencies..."
+# Install Python dependencies in global environment
+echo "Installing Python dependencies (global environment)..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
@@ -48,8 +43,8 @@ fi
 cd ..
 
 # Setup Frontend
-echo "🔧 Setting up frontend..."
-cd frontend
+echo "🔧 Setting up agriculture-ai-frontend..."
+cd agriculture-ai-frontend
 
 # Install Node.js dependencies
 echo "Installing Node.js dependencies..."
@@ -58,7 +53,7 @@ npm install
 # Copy environment file
 if [ ! -f .env ]; then
     cp .env.example .env
-    echo "📝 Created frontend .env file - please configure as needed"
+    echo "📝 Created agriculture-ai-frontend .env file - please configure as needed"
 fi
 
 cd ..
@@ -66,10 +61,10 @@ cd ..
 echo "✅ Setup complete!"
 echo ""
 echo "🚀 To start the application:"
-echo "1. Start backend: cd backend && source venv/bin/activate && python main.py"
-echo "2. Start frontend: cd frontend && npm start"
+echo "1. Start backend: cd backend && uvicorn main:app --reload --host 0.0.0.0 --port 8000"
+echo "2. Start frontend: cd agriculture-ai-frontend && npm run dev"
 echo ""
-echo "📱 Access the application at: http://localhost:3000"
+echo "📱 Access the frontend at: http://localhost:5173"
 echo "📚 API documentation at: http://localhost:8000/docs"
 echo ""
 echo "⚠️  Important:"

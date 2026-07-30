@@ -95,8 +95,9 @@ class CropModel:
                 warnings.append(f"{feat}={v} is outside typical range [{lo}, {hi}]")
 
         # Predict
-        pred_encoded = self.model.predict(features)[0]
-        crop_name    = self.label_encoder.inverse_transform([int(pred_encoded)])[0]
+        pred_encoded = self.model.predict(features)
+        pred_val     = int(np.asarray(pred_encoded).ravel()[0])
+        crop_name    = self.label_encoder.inverse_transform([pred_val])[0]
 
         # Class probabilities if available
         recommendations = []
