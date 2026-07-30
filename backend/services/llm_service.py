@@ -6,7 +6,10 @@ import logging
 import os
 from typing import AsyncGenerator
 
-import openai
+try:
+    import openai
+except ImportError:
+    openai = None
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,8 @@ Rules:
 
 class LLMService:
     def __init__(self, api_key: str, base_url: str = None):
+        if openai is None:
+            raise RuntimeError("openai package is not installed.")
         kwargs = {"api_key": api_key}
         if base_url:
             kwargs["base_url"] = base_url
@@ -40,6 +45,9 @@ class LLMService:
         """
         Async generation — returns full response string.
         """
+        if openai is None:
+            return "LLM service unavailable."
+
         user_message = ""
         if rag_passages:
             user_message += "--- Reference Knowledge ---\n" + rag_passages + "\n\n"
@@ -58,7 +66,7 @@ class LLMService:
                 ],
             )
             return response.choices[0].message.content
-        except openai.OpenAIError as exc:
+        except Exception as exc:
             logger.error("OpenAI API error: %s", exc)
             raise RuntimeError(f"LLM service error: {exc}") from exc
 
@@ -67,6 +75,10 @@ class LLMService:
         Async streaming generator — yields text chunks.
         Use with FastAPI StreamingResponse.
         """
+        if openai is None:
+            yield "LLM service unavailable."
+            return
+
         user_message = ""
         if rag_passages:
             user_message += "--- Reference Knowledge ---\n" + rag_passages + "\n\n"
@@ -88,6 +100,6 @@ class LLMService:
             async for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content
-        except openai.OpenAIError as exc:
+        except Exception as exc:
             logger.error("OpenAI API stream error: %s", exc)
             yield f"\n[Error: {exc}]"
