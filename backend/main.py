@@ -193,6 +193,51 @@ class HealthResponse(BaseModel):
     redis_connected: bool
 
 
+# ── Root Landing Page ─────────────────────────────────────────────────────────
+from fastapi.responses import HTMLResponse
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def root():
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Terra·AI — Agricultural Intelligence API</title>
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 2rem; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+            .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 2rem; max-width: 600px; width: 100%; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); }
+            h1 { color: #4ade80; margin-top: 0; display: flex; align-items: center; gap: 0.5rem; }
+            p { color: #94a3b8; line-height: 1.6; }
+            .status { display: inline-flex; align-items: center; gap: 0.5rem; background: #166534; color: #4ade80; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem; }
+            .status-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; }
+            ul { list-style: none; padding: 0; margin: 1.5rem 0; }
+            li { padding: 0.75rem; background: #0f172a; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid #334155; }
+            code { color: #38bdf8; font-family: monospace; font-size: 0.9em; }
+            .btn { display: inline-block; background: #22c55e; color: #0f172a; font-weight: bold; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 8px; margin-top: 1rem; text-align: center; }
+            .btn:hover { background: #16a34a; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="status"><span class="status-dot"></span> Backend Online & Operational</div>
+            <h1>🌿 Terra·AI Agricultural Intelligence</h1>
+            <p>Multi-Model Artificial Intelligence API powered by MobileNetV2 (Plant Disease), EfficientNet-B0 (Soil Analysis), and CatBoost (Crop Recommendation).</p>
+            <h3>Available Endpoints:</h3>
+            <ul>
+                <li><code>POST /api/v1/analyze/disease</code> — Leaf disease diagnosis</li>
+                <li><code>POST /api/v1/analyze/soil</code> — Soil type classification</li>
+                <li><code>POST /api/v1/recommend/crop</code> — Crop recommendation</li>
+                <li><code>GET  /api/v1/health</code> — Backend status check</li>
+            </ul>
+            <a href="/docs" class="btn">Explore & Test API (Swagger UI) →</a>
+        </div>
+    </body>
+    </html>
+    """
+
+
 # ── Health check ──────────────────────────────────────────────────────────────
 @app.get("/health", response_model=HealthResponse, tags=["system"])
 @app.get("/api/v1/health", response_model=HealthResponse, tags=["system"])
