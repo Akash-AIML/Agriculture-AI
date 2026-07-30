@@ -4,18 +4,22 @@ import io
 import hashlib
 from PIL import Image
 import numpy as np
-import torch
-from torchvision import transforms
 
-inference_transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-])
+try:
+    import torch
+    from torchvision import transforms
+    inference_transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+    ])
+except ImportError:
+    torch = None
+    inference_transform = None
 
 
-def preprocess_image(image_bytes: bytes) -> tuple[torch.Tensor, str]:
+def preprocess_image(image_bytes: bytes) -> tuple:
     """
-    Validate, preprocess and return a (1, 3, 224, 224) float32 tensor
+    Validate, preprocess and return a (1, 3, 224, 224) float32 tensor/ndarray
     plus a deterministic cache key (SHA-256 of raw bytes).
     Raises ValueError for invalid / non-image data.
     """
@@ -36,7 +40,12 @@ def preprocess_image(image_bytes: bytes) -> tuple[torch.Tensor, str]:
         raise ValueError(f"Image too small ({w}×{h}). Minimum 64×64 px required.")
 
     # --- transform ---
-    tensor = inference_transform(img).unsqueeze(0)  # (1, 3, 224, 224)
+    if torch is not None and inference_transform is not None:
+        tensor = inference_transform(img).unsqueeze(0)  # (1, 3, 224, 224)
+    else:
+        resized = img.resize((224, 224))
+        arr = np.array(resized, dtype=np.float32) / 255.0
+        tensor = np.transpose(arr, (2, 0, 1))[np.newaxis, ...]
 
     # --- cache key ---
     cache_key = hashlib.sha256(image_bytes).hexdigest()
