@@ -7,7 +7,6 @@ If torch or model file is absent, FallbackSoilModel is used.
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 try:
     import torch
@@ -133,36 +132,40 @@ class SoilModel:
             self.model = self.model.float().to(self.device).eval()
 
     def predict(self, tensor=None) -> dict:
-        if self.model is None:
-            self.model = FallbackSoilModel()
-
-        if isinstance(self.model, FallbackSoilModel):
-            return self.model.predict(tensor)
-
-        if torch is None:
+        if self.model is None or isinstance(self.model, FallbackSoilModel) or torch is None:
             return FallbackSoilModel().predict(tensor)
 
-        with torch.no_grad():
-            logits = self.model(tensor.to(self.device))
-            probs  = torch.softmax(logits, dim=1)[0]
-            top_prob, top_idx = torch.max(probs, dim=0)
+        if not isinstance(tensor, torch.Tensor):
+            try:
+                tensor = torch.from_numpy(tensor).float()
+            except Exception:
+                return FallbackSoilModel().predict(tensor)
 
-            soil_name = SOIL_CLASSES[top_idx.item()] if top_idx.item() < len(SOIL_CLASSES) else f"class_{top_idx.item()}"
-            confidence = round(float(top_prob) * 100, 2)
-            props = SOIL_PROPERTIES.get(soil_name, {})
+        try:
+            with torch.no_grad():
+                logits = self.model(tensor.to(self.device))
+                probs  = torch.softmax(logits, dim=1)[0]
+                top_prob, top_idx = torch.max(probs, dim=0)
 
-            all_probs = [
-                {"label": SOIL_CLASSES[i] if i < len(SOIL_CLASSES) else f"class_{i}", "confidence": round(float(p) * 100, 2)}
-                for i, p in enumerate(probs.tolist())
-            ]
+                soil_name = SOIL_CLASSES[top_idx.item()] if top_idx.item() < len(SOIL_CLASSES) else f"class_{top_idx.item()}"
+                confidence = round(float(top_prob) * 100, 2)
+                props = SOIL_PROPERTIES.get(soil_name, {})
 
-            return {
-                "soil_type":       soil_name,
-                "confidence":      confidence,
-                "water_retention": props.get("water_retention", "Unknown"),
-                "drainage":        props.get("drainage", "Unknown"),
-                "fertility":       props.get("fertility", "Unknown"),
-                "suitable_crops":  props.get("suitable_crops", []),
-                "tips":            props.get("tips", []),
-                "all_classes":     all_probs,
-            }
+                all_probs = [
+                    {"label": SOIL_CLASSES[i] if i < len(SOIL_CLASSES) else f"class_{i}", "confidence": round(float(p) * 100, 2)}
+                    for i, p in enumerate(probs.tolist())
+                ]
+
+                return {
+                    "soil_type":       soil_name,
+                    "confidence":      confidence,
+                    "water_retention": props.get("water_retention", "Unknown"),
+                    "drainage":        props.get("drainage", "Unknown"),
+                    "fertility":       props.get("fertility", "Unknown"),
+                    "suitable_crops":  props.get("suitable_crops", []),
+                    "tips":            props.get("tips", []),
+                    "all_classes":     all_probs,
+                }
+        except Exception as exc:
+            logger.warning("PyTorch soil inference failed (%s). Returning fallback prediction.", exc)
+            return FallbackSoilModel().predict(tensor)
