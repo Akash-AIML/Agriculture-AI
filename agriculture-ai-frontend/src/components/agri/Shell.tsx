@@ -7,6 +7,7 @@ import { DiseaseTab } from "./DiseaseTab";
 import { SoilTab } from "./SoilTab";
 import { CropTab } from "./CropTab";
 import { AdviceTab } from "./AdviceTab";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 type TabId = "disease" | "soil" | "crop" | "advice";
 
@@ -98,10 +99,12 @@ export function Shell() {
         {/* Main */}
         <main className="pb-28 md:pb-12 md:pl-64">
           <div className="mx-auto max-w-5xl space-y-8 p-4 sm:p-6">
-            {tab === "disease" && <DiseaseTab />}
-            {tab === "soil" && <SoilTab />}
-            {tab === "crop" && <CropTab />}
-            {tab === "advice" && <AdviceTab />}
+            <ErrorBoundary>
+              {tab === "disease" && <DiseaseTab />}
+              {tab === "soil" && <SoilTab />}
+              {tab === "crop" && <CropTab />}
+              {tab === "advice" && <AdviceTab />}
+            </ErrorBoundary>
           </div>
         </main>
 
