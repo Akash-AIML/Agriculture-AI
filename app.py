@@ -7,6 +7,7 @@ Custom React Frontend is served at /
 
 import os
 import sys
+import asyncio
 from pathlib import Path
 
 root_dir = Path(__file__).resolve().parent
@@ -48,7 +49,18 @@ if frontend_dist.exists():
             return FileResponse(str(index_file))
         return {"message": "Route not found"}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.getenv("PORT", "7860"))
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
+    config = uvicorn.Config("app:app", host="0.0.0.0", port=port, log_level="info")
+    server = uvicorn.Server(config)
+    
+    async def run_server():
+        await server.serve()
+
+    try:
+        asyncio.run(run_server())
+    except (KeyboardInterrupt, SystemExit):
+        pass
