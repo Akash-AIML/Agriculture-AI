@@ -61,9 +61,9 @@ async def lifespan(app: FastAPI):
     cache._redis_url = os.getenv("REDIS_URL")
     await cache.connect()
 
-    # ── Models ───────────────────────────────────────────────────────────────
+    base_dir = Path(__file__).parent
     disease_model = DiseaseModel(
-        model_path  = os.getenv("DISEASE_MODEL_PATH", "models/disease_model_fp16.pth"),
+        model_path  = os.getenv("DISEASE_MODEL_PATH") or str(base_dir / "models/disease_model_fp16.pth"),
         num_classes = int(os.getenv("DISEASE_NUM_CLASSES", "38")),
     )
     try:
@@ -73,7 +73,7 @@ async def lifespan(app: FastAPI):
         disease_model = None
 
     soil_model = SoilModel(
-        model_path  = os.getenv("SOIL_MODEL_PATH", "models/soil_model.pth"),
+        model_path  = os.getenv("SOIL_MODEL_PATH") or str(base_dir / "models/soil_model.pth"),
         num_classes = int(os.getenv("SOIL_NUM_CLASSES", "4")),
     )
     try:
@@ -83,8 +83,8 @@ async def lifespan(app: FastAPI):
         soil_model = None
 
     crop_model_obj = CropModel(
-        model_path          = os.getenv("CROP_MODEL_PATH", "models/crop_model.pkl"),
-        label_encoder_path  = os.getenv("LABEL_ENCODER_PATH", "models/label_enoder_crop.pkl"),
+        model_path          = os.getenv("CROP_MODEL_PATH") or str(base_dir / "models/crop_model.pkl"),
+        label_encoder_path  = os.getenv("LABEL_ENCODER_PATH") or str(base_dir / "models/label_enoder_crop.pkl"),
     )
     try:
         crop_model_obj.load()

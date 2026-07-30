@@ -2,5 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "cd agriculture-ai-frontend && npm run build",
   "outputDirectory": "agriculture-ai-frontend/dist/client",
-  "framework": "vite"
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "/api/index.py"
+    }
+  ]
 }
