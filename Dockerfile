@@ -1,28 +1,26 @@
 FROM python:3.10-slim
 
-# HF Spaces runs as non-root user 1000
-RUN useradd -m -u 1000 user
 WORKDIR /app
 
-# Install system deps
+# Install system deps (libgomp for PyTorch OpenMP)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python deps from backend requirements
+# Install Python deps
 COPY backend/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+    && pip install --no-cache-dir \
+        torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
-# Copy backend source + models
+# Copy backend source + model files
 COPY backend/ /app/backend/
-COPY app.py /app/app.py
 
-# Fix permissions
-RUN chown -R user:user /app
-USER user
+# Cloud Run injects $PORT (default 8080), HF Spaces uses 7860
+# uvicorn reads it dynamically
+ENV PORT=8080
 
-EXPOSE 7860
+EXPOSE 8080
 
-# Run the FastAPI backend directly with uvicorn
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Use shell form so $PORT is expanded at runtime
+CMD uvicorn backend.main:app --host 0.0.0.0 --port $PORT
