@@ -6,26 +6,33 @@ import { useAgri } from "@/lib/agri-store";
 import { TRANSLATIONS } from "@/lib/i18n";
 import { recommendCrop, type CropInput } from "@/lib/api";
 
-const DEFAULTS: CropInput = {
-  N: 42,
-  P: 50,
-  K: 43,
-  temperature: 26,
-  humidity: 70,
-  ph: 6.5,
-  rainfall: 120,
-};
-
 export function CropTab() {
   const { lang, crops, setCrops } = useAgri();
   const t = TRANSLATIONS[lang]?.crop ?? TRANSLATIONS.en.crop;
-  const [input, setInput] = useState<CropInput>(DEFAULTS);
+
+  const [n, setN] = useState(42);
+  const [p, setP] = useState(50);
+  const [k, setK] = useState(43);
+  const [temperature, setTemperature] = useState(26);
+  const [humidity, setHumidity] = useState(70);
+  const [ph, setPh] = useState(6.5);
+  const [rainfall, setRainfall] = useState(120);
+
   const [loading, setLoading] = useState(false);
 
   const submit = async () => {
     setLoading(true);
     try {
-      const res = await recommendCrop(input, lang);
+      const payload: CropInput = {
+        N: Number(n) || 0,
+        P: Number(p) || 0,
+        K: Number(k) || 0,
+        temperature: Number(temperature) || 0,
+        humidity: Number(humidity) || 0,
+        ph: Number(ph) || 0,
+        rainfall: Number(rainfall) || 0,
+      };
+      const res = await recommendCrop(payload, lang);
       setCrops(res.recommendations);
     } catch (e) {
       console.error(e);
@@ -35,13 +42,7 @@ export function CropTab() {
     }
   };
 
-  const set = (k: keyof CropInput, v: number) => {
-    const val = Number.isFinite(v) ? v : 0;
-    setInput((s) => ({ ...s, [k]: val }));
-  };
-
   const safeCrops = Array.isArray(crops) ? crops : [];
-  const currentPh = Number.isFinite(input.ph) ? input.ph : 6.5;
 
   return (
     <TabWrapper>
@@ -52,36 +53,95 @@ export function CropTab() {
           {/* Form */}
           <div className="space-y-6">
             <div className="grid grid-cols-3 gap-3 sm:gap-4">
-              <NumField label={t.n} value={input.N} onChange={(v) => set("N", v)} />
-              <NumField label={t.p} value={input.P} onChange={(v) => set("P", v)} />
-              <NumField label={t.k} value={input.K} onChange={(v) => set("K", v)} />
+              <div>
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest opacity-50">
+                  {t.n}
+                </label>
+                <input
+                  type="number"
+                  value={n}
+                  onChange={(e) => setN(parseFloat(e.target.value) || 0)}
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest opacity-50">
+                  {t.p}
+                </label>
+                <input
+                  type="number"
+                  value={p}
+                  onChange={(e) => setP(parseFloat(e.target.value) || 0)}
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest opacity-50">
+                  {t.k}
+                </label>
+                <input
+                  type="number"
+                  value={k}
+                  onChange={(e) => setK(parseFloat(e.target.value) || 0)}
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <NumField
-                label={t.temperature}
-                value={input.temperature}
-                step={0.1}
-                onChange={(v) => set("temperature", v)}
-              />
-              <NumField
-                label={t.humidity}
-                value={input.humidity}
-                step={0.1}
-                onChange={(v) => set("humidity", v)}
-              />
-              <NumField
-                label={t.rainfall}
-                value={input.rainfall}
-                step={0.1}
-                onChange={(v) => set("rainfall", v)}
-              />
-              <NumField
-                label={t.ph}
-                value={input.ph}
-                step={0.1}
-                onChange={(v) => set("ph", v)}
-              />
+              <div>
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest opacity-50">
+                  {t.temperature}
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseFloat(e.target.value) || 0)}
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest opacity-50">
+                  {t.humidity}
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={humidity}
+                  onChange={(e) => setHumidity(parseFloat(e.target.value) || 0)}
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest opacity-50">
+                  {t.rainfall}
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={rainfall}
+                  onChange={(e) => setRainfall(parseFloat(e.target.value) || 0)}
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest opacity-50">
+                  {t.ph}
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={ph}
+                  onChange={(e) => setPh(parseFloat(e.target.value) || 0)}
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -90,21 +150,16 @@ export function CropTab() {
                   {t.ph}
                 </label>
                 <span className="font-mono text-sm font-bold">
-                  {currentPh.toFixed(1)}
+                  {Number(ph).toFixed(1)}
                 </span>
               </div>
               <input
                 type="range"
-                min={0}
-                max={14}
-                step={0.1}
-                value={currentPh}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  if (Number.isFinite(val)) {
-                    set("ph", val);
-                  }
-                }}
+                min="0"
+                max="14"
+                step="0.1"
+                value={ph}
+                onChange={(e) => setPh(parseFloat(e.target.value) || 0)}
                 className="w-full cursor-pointer accent-primary"
               />
               <div className="flex justify-between font-mono text-[9px] opacity-40">
@@ -141,23 +196,14 @@ export function CropTab() {
             ) : (
               safeCrops.map((c, i) => {
                 const cropName = String(c?.crop ?? "Crop");
-                const rawProb =
-                  typeof c?.probability === "number" && Number.isFinite(c.probability)
-                    ? c.probability
-                    : 0;
-                const pct =
-                  rawProb > 1
-                    ? Math.min(100, Math.max(0, rawProb))
-                    : Math.min(100, Math.max(0, rawProb * 100));
-                const safePct = Number.isFinite(pct) ? pct : 0;
-                const initials = cropName.slice(0, 2).toUpperCase() || "CR";
-                const cardOpacity = Math.max(0.4, Math.min(1, 1 - i * 0.15));
+                const prob = Number(c?.probability) || 0;
+                const pct = prob > 1 ? Math.min(100, prob) : Math.min(100, prob * 100);
+                const initials = cropName.substring(0, 2).toUpperCase() || "CR";
 
                 return (
                   <div
                     key={`${cropName}-${i}`}
                     className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4"
-                    style={{ opacity: cardOpacity }}
                   >
                     <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-sage-soft font-bold italic text-primary">
                       {initials}
@@ -168,13 +214,13 @@ export function CropTab() {
                           {cropName}
                         </h5>
                         <span className="font-mono text-[11px] font-bold">
-                          {safePct.toFixed(0)}% {t.match}
+                          {Math.round(pct)}% {t.match}
                         </span>
                       </div>
                       <div className="h-1 w-full rounded-full bg-sage-soft">
                         <div
-                          className="h-full rounded-full bg-primary transition-[width] duration-500"
-                          style={{ width: `${safePct}%` }}
+                          className="h-full rounded-full bg-primary"
+                          style={{ width: `${Math.round(pct)}%` }}
                         />
                       </div>
                     </div>
@@ -186,38 +232,5 @@ export function CropTab() {
         </div>
       </div>
     </TabWrapper>
-  );
-}
-
-function NumField({
-  label,
-  value,
-  onChange,
-  step = 1,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  step?: number;
-}) {
-  const displayVal = Number.isFinite(value) ? value : 0;
-  return (
-    <div className="min-w-0">
-      <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest opacity-50">
-        {label}
-      </label>
-      <input
-        type="number"
-        value={displayVal}
-        step={step}
-        onChange={(e) => {
-          const val = parseFloat(e.target.value);
-          if (Number.isFinite(val)) {
-            onChange(val);
-          }
-        }}
-        className="w-full rounded-xl border border-border bg-card px-3 py-2.5 font-mono text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20"
-      />
-    </div>
   );
 }
