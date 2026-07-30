@@ -35,8 +35,9 @@ with gr.Blocks(title="Terra·AI — Agricultural Intelligence API") as demo:
         "- `GET  /docs` — Swagger UI"
     )
 
-# Mount Gradio onto FastAPI app (keeps all /api/v1/* routes intact)
-app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio")
+# Mount Gradio at ROOT so HF health check at /startup-events returns 200
+# FastAPI /api/v1/* routes still work — they're on the same app instance
+app = gr.mount_gradio_app(fastapi_app, demo, path="/")
 
 # Run uvicorn — blocks forever, keeping the HF container alive
 if __name__ == "__main__":
