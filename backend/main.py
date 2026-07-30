@@ -27,7 +27,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-load_dotenv()
+load_dotenv(override=True)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(name)s | %(message)s")
 logger = logging.getLogger("agrosense")
 
@@ -96,12 +96,13 @@ async def lifespan(app: FastAPI):
     rag_service = RAGService(docs_dir=os.getenv("RAG_DOCS_DIR", "./rag_docs"))
 
     # ── LLM ──────────────────────────────────────────────────────────────────
-    api_key = os.getenv("OPENAI_API_KEY", "")
-    base_url = os.getenv("OPENAI_BASE_URL", None)
-    if api_key:
+    api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
+    base_url = (os.getenv("OPENAI_BASE_URL") or "").strip() or None
+    if api_key and api_key != "your_openai_api_key_here":
         llm_service = LLMService(api_key=api_key, base_url=base_url)
+        logger.info("LLM service initialized (base_url=%s).", base_url or "default")
     else:
-        logger.warning("OPENAI_API_KEY not set — LLM endpoints disabled.")
+        logger.warning("OPENAI_API_KEY not configured in backend/.env — LLM endpoints disabled.")
 
     logger.info("AgroSense AI startup complete.")
     yield
@@ -121,14 +122,25 @@ app     = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:8081,http://127.0.0.1:8081").split(",")]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins     = origins,
-    allow_credentials = True,
-    allow_methods     = ["*"],
-    allow_headers     = ["*"],
-)
+cors_origins_env = os.getenv("CORS_ORIGINS", "*").strip()
+if cors_origins_env == "*":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_origin_regex=r"https://.*\.vercel\.app",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
@@ -179,6 +191,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
 async def analyze_disease(
     request : Request,
     file    : UploadFile = File(..., description="Plant leaf image"),
+    lang    : Optional[str] = Form("en"),
 ):
     if not disease_model:
         raise HTTPException(status_code=503, detail="Disease model not loaded.")
@@ -214,6 +227,7 @@ async def analyze_disease(
 async def analyze_soil(
     request : Request,
     file    : UploadFile = File(..., description="Soil image"),
+    lang    : Optional[str] = Form("en"),
 ):
     if not soil_model:
         raise HTTPException(status_code=503, detail="Soil model not loaded.")

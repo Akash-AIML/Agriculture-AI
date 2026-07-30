@@ -41,9 +41,12 @@ class Orchestrator:
         # ── Disease ───────────────────────────────────────────────────────────
         if disease_result:
             conf = disease_result.get("confidence", 0)
+            if 0 < conf <= 1.0:
+                conf = conf * 100.0
             uncertain = conf < DISEASE_THRESHOLD
             merged["disease"] = {
                 **disease_result,
+                "confidence": conf,
                 "uncertain": uncertain,
             }
             if uncertain:
@@ -55,9 +58,12 @@ class Orchestrator:
         # ── Soil ──────────────────────────────────────────────────────────────
         if soil_result:
             conf = soil_result.get("confidence", 0)
+            if 0 < conf <= 1.0:
+                conf = conf * 100.0
             uncertain = conf < SOIL_THRESHOLD
             merged["soil"] = {
                 **soil_result,
+                "confidence": conf,
                 "uncertain": uncertain,
             }
             if uncertain:
@@ -68,14 +74,27 @@ class Orchestrator:
 
         # ── Crop ──────────────────────────────────────────────────────────────
         if crop_result:
-            # Filter low-probability alternatives
+            recs = crop_result.get("recommendations", [])
+            normalized_recs = []
+            for r in recs:
+                prob = r.get("probability", 0)
+                if 0 < prob <= 1.0:
+                    prob = prob * 100.0
+                normalized_recs.append({**r, "probability": prob})
+
             filtered_recs = [
-                r for r in crop_result.get("recommendations", [])
+                r for r in normalized_recs
                 if r["probability"] >= CROP_MIN_PROB
             ]
+            top_rec = (
+                crop_result.get("recommended_crop")
+                or (normalized_recs[0]["crop"] if normalized_recs else "Unknown")
+            )
+
             merged["crop"] = {
                 **crop_result,
-                "recommendations": filtered_recs or crop_result.get("recommendations", [])[:1],
+                "recommended_crop": top_rec,
+                "recommendations": filtered_recs or normalized_recs[:1],
             }
             if crop_result.get("input_warnings"):
                 merged["warnings"].extend(crop_result["input_warnings"])
@@ -91,24 +110,33 @@ class Orchestrator:
 
         d = merged.get("disease")
         if d:
+            disease_name = d.get("disease", "Unknown")
+            conf = d.get("confidence", 0)
             if d.get("is_healthy"):
                 parts.append("Plant appears healthy.")
             elif d.get("uncertain"):
-                parts.append(f"Possible disease detected: {d['disease']} (low confidence).")
+                parts.append(f"Possible disease detected: {disease_name} (low confidence).")
             else:
-                parts.append(f"Disease detected: {d['disease']} ({d['confidence']:.1f}% confidence).")
+                parts.append(f"Disease detected: {disease_name} ({conf:.1f}% confidence).")
 
         s = merged.get("soil")
         if s:
+            soil_type = s.get("soil_type", "Unknown")
+            props = s.get("properties", {})
+            fertility = s.get("fertility") or props.get("Fertility") or "?"
+            drainage = s.get("drainage") or props.get("Drainage") or "?"
             parts.append(
-                f"Soil type: {s['soil_type']} — "
-                f"fertility {s.get('fertility', '?')}, "
-                f"drainage {s.get('drainage', '?')}."
+                f"Soil type: {soil_type} — "
+                f"fertility {fertility}, "
+                f"drainage {drainage}."
             )
 
         c = merged.get("crop")
         if c:
-            top = c.get("recommended_crop", "")
+            top = (
+                c.get("recommended_crop")
+                or (c.get("recommendations", [{}])[0].get("crop", "Unknown") if c.get("recommendations") else "Unknown")
+            )
             parts.append(f"Recommended crop: {top}.")
 
         return " ".join(parts) if parts else "No analysis data available."
@@ -121,34 +149,58 @@ class Orchestrator:
 
         d = merged.get("disease")
         if d:
+            disease_name = d.get("disease", "Unknown")
+            conf = d.get("confidence", 0)
             lines.append("## Disease Detection")
-            lines.append(f"- Detected: {d['disease']}")
-            lines.append(f"- Confidence: {d['confidence']:.1f}%")
+            lines.append(f"- Detected: {disease_name}")
+            lines.append(f"- Confidence: {conf:.1f}%")
             if d.get("uncertain"):
                 lines.append("- Note: confidence below threshold — treat with caution")
-            if d.get("treatments"):
-                lines.append("- Suggested treatments: " + "; ".join(d["treatments"]))
+            treatments = d.get("treatments") or ([d["treatment"]] if d.get("treatment") else [])
+            if treatments:
+                lines.append(
+                    "- Suggested treatments: "
+                    + ("; ".join(treatments) if isinstance(treatments, list) else str(treatments))
+                )
             lines.append("")
 
         s = merged.get("soil")
         if s:
+            soil_type = s.get("soil_type", "Unknown")
+            conf = s.get("confidence", 0)
+            props = s.get("properties", {})
             lines.append("## Soil Analysis")
-            lines.append(f"- Type: {s['soil_type']} ({s['confidence']:.1f}% confidence)")
-            lines.append(f"- Water retention: {s.get('water_retention', '?')}")
-            lines.append(f"- Drainage: {s.get('drainage', '?')}")
-            lines.append(f"- Fertility: {s.get('fertility', '?')}")
-            if s.get("suitable_crops"):
-                lines.append("- Suitable crops: " + ", ".join(s["suitable_crops"]))
-            if s.get("tips"):
-                lines.append("- Soil management tips: " + "; ".join(s["tips"]))
+            lines.append(f"- Type: {soil_type} ({conf:.1f}% confidence)")
+            lines.append(f"- Water retention: {s.get('water_retention') or props.get('Water Retention', '?')}")
+            lines.append(f"- Drainage: {s.get('drainage') or props.get('Drainage', '?')}")
+            lines.append(f"- Fertility: {s.get('fertility') or props.get('Fertility', '?')}")
+            crops = s.get("suitable_crops") or props.get("Suitable Crops")
+            if crops:
+                lines.append(
+                    "- Suitable crops: "
+                    + (", ".join(crops) if isinstance(crops, list) else str(crops))
+                )
+            tips = s.get("tips") or props.get("Tips")
+            if tips:
+                lines.append(
+                    "- Soil management tips: "
+                    + ("; ".join(tips) if isinstance(tips, list) else str(tips))
+                )
             lines.append("")
 
         c = merged.get("crop")
         if c:
+            top = (
+                c.get("recommended_crop")
+                or (c.get("recommendations", [{}])[0].get("crop", "Unknown") if c.get("recommendations") else "Unknown")
+            )
             lines.append("## Crop Recommendation")
-            lines.append(f"- Top recommendation: {c['recommended_crop']}")
+            lines.append(f"- Top recommendation: {top}")
             if c.get("recommendations"):
-                alts = [f"{r['crop']} ({r['probability']:.1f}%)" for r in c["recommendations"][:3]]
+                alts = [
+                    f"{r.get('crop', 'Unknown')} ({r.get('probability', 0):.1f}%)"
+                    for r in c["recommendations"][:3]
+                ]
                 lines.append("- Alternatives: " + ", ".join(alts))
             if c.get("tip"):
                 lines.append(f"- Tip: {c['tip']}")

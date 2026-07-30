@@ -1,8 +1,10 @@
-# OS / editor
+# OS / Editor
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # Python
 __pycache__/
@@ -31,6 +33,11 @@ env/
 # Build / packaging
 build/
 dist/
+dist-ssr/
+.output/
+.nitro/
+.tanstack/
+.lovable/
 *.egg-info/
 .eggs/
 
@@ -49,29 +56,17 @@ dist/
 !dataset/agri_ai_dataset/models/*.pth
 !dataset/agri_ai_dataset/models/*.pkl
 
-
 # Dataset images and raw data
 dataset/agri_ai_dataset/crop_recommendation/
 dataset/agri_ai_dataset/extra_classes/
 dataset/agri_ai_dataset/plant_disease/
 dataset/agri_ai_dataset/soil_classification/
 
-# Node / React / React Native
+# Node / React / Vite
 node_modules/
-.expo/
-.expo-shared/
 .npm/
 .yarn/
 .pnpm-store/
 coverage/
 .vite/
-metro-cache/
 *.tsbuildinfo
-
-# Android / iOS build outputs
-android/build/
-ios/build/
-
-# Misc generated files
-*.swp
-*.swo

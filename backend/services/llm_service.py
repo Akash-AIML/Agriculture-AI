@@ -29,8 +29,11 @@ Rules:
 
 class LLMService:
     def __init__(self, api_key: str, base_url: str = None):
-        self._sync_client = openai.OpenAI(api_key=api_key, base_url=base_url)
-        self._async_client = openai.AsyncOpenAI(api_key=api_key, base_url=base_url)
+        kwargs = {"api_key": api_key}
+        if base_url:
+            kwargs["base_url"] = base_url
+        self._sync_client = openai.OpenAI(**kwargs)
+        self._async_client = openai.AsyncOpenAI(**kwargs)
         self.model = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
     async def invoke(self, context: str, rag_passages: str = "", prompt: str = "") -> str:
