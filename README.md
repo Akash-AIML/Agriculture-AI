@@ -1,3 +1,14 @@
+---
+title: Agri AI
+emoji: 🌿
+colorFrom: green
+colorTo: emerald
+sdk: gradio
+sdk_version: 4.44.0
+app_file: app.py
+pinned: false
+---
+
 # Agriculture-AI
 
 Multi-model agricultural AI: disease detection, soil analysis, crop recommendation, and LLM-powered advice — with full multilingual support (English, Tamil, Hindi, Telugu).
