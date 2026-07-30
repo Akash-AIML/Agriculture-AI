@@ -2,10 +2,11 @@
 Soil classification model wrapper (EfficientNet-B0 + Fallback).
 
 Classifies soil images into standard types.
-If torch or model file is absent, FallbackSoilModel is used.
+If torch, model file, or Vercel serverless environment is detected, FallbackSoilModel is used for zero-crash execution.
 """
 
 import logging
+import os
 from pathlib import Path
 
 try:
@@ -18,6 +19,7 @@ except ImportError:
     tv_models = None
 
 logger = logging.getLogger(__name__)
+IS_VERCEL = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
 
 # ── Soil type labels ────────────────────────────────────────────────────────
 SOIL_CLASSES = ["Alluvial soil", "Black Soil", "Clay soil", "Red soil"]
@@ -90,7 +92,7 @@ class SoilModel:
         self.device = torch.device("cpu") if torch is not None else None
 
     def load(self):
-        if torch is None or not self.model_path.exists():
+        if IS_VERCEL or torch is None or not self.model_path.exists():
             logger.info("Using FallbackSoilModel.")
             self.model = FallbackSoilModel()
             return
@@ -132,7 +134,7 @@ class SoilModel:
             self.model = self.model.float().to(self.device).eval()
 
     def predict(self, tensor=None) -> dict:
-        if self.model is None or isinstance(self.model, FallbackSoilModel) or torch is None:
+        if self.model is None or isinstance(self.model, FallbackSoilModel) or torch is None or IS_VERCEL:
             return FallbackSoilModel().predict(tensor)
 
         if not isinstance(tensor, torch.Tensor):
