@@ -182,7 +182,7 @@ class AdviceRequest(BaseModel):
     question: Optional[str] = Field(None, description="Optional custom question from user")
     disease_result: Optional[dict] = Field(None, description="Output from /analyze/disease")
     soil_result: Optional[dict] = Field(None, description="Output from /analyze/soil")
-    crop_result: Optional[list] = Field(None, description="Output from /recommend/crop")
+    crop_result: Optional[dict] = Field(None, description="Output from /recommend/crop")
     language: str = Field("en", description="Response language: en | ta | hi | te")
 
 
