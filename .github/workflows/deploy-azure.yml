@@ -61,3 +61,7 @@ jobs:
           targetPort: 8080
           ingress: external
           environmentVariables: CORS_ORIGINS=*,PORT=8080,OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},OPENAI_BASE_URL=${{ secrets.OPENAI_BASE_URL }},LLM_MODEL=${{ secrets.LLM_MODEL }}
+
+      - name: Inspect Container App Env
+        run: |
+          az containerapp show -n agri-ai -g agri-ai-rg --query "properties.template.containers[0].env"
