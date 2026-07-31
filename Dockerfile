@@ -2,9 +2,11 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system deps (libgomp for PyTorch OpenMP)
+# Install system deps (libgomp for PyTorch OpenMP, libssl/libgcc for primp/ddgs)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
+    libssl-dev \
+    libgcc-s1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python deps
