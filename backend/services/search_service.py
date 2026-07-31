@@ -19,7 +19,11 @@ class WebSearchService:
             return ""
 
         try:
-            from duckduckgo_search import DDGS
+            try:
+                from ddgs import DDGS
+            except ImportError:
+                from duckduckgo_search import DDGS
+                
             logger.info("Querying DuckDuckGo: '%s'", query)
             with DDGS() as ddgs:
                 results = list(ddgs.text(query, max_results=self.max_results))
