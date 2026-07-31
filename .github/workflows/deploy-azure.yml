@@ -64,4 +64,7 @@ jobs:
 
       - name: Inspect Container App Env
         run: |
-          az containerapp show -n agri-ai -g agri-ai-rg --query "properties.template.containers[0].env"
+          echo "=== Provisioning State ==="
+          az containerapp show -n agri-ai -g agri-ai-rg --query "properties.provisioningState"
+          echo "=== Revisions Table ==="
+          az containerapp revision list -n agri-ai -g agri-ai-rg -o table
