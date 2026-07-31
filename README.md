@@ -10,6 +10,10 @@ pinned: false
 
 # Agriculture-AI
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-agri.akashg.me-brightgreen?style=for-the-badge&logo=vercel)](https://agri.akashg.me/)
+
+🔗 **Live Demo:** [https://agri.akashg.me](https://agri.akashg.me)
+
 Multi-model agricultural AI: disease detection, soil analysis, crop recommendation, and LLM-powered advice — with full multilingual support (English, Tamil, Hindi, Telugu).
 
 ---
