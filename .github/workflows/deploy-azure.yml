@@ -68,3 +68,5 @@ jobs:
           az containerapp show -n agri-ai -g agri-ai-rg --query "properties.provisioningState"
           echo "=== Revisions Table ==="
           az containerapp revision list -n agri-ai -g agri-ai-rg -o table
+          echo "=== Container Logs ==="
+          az containerapp logs show -n agri-ai -g agri-ai-rg --tail 100
