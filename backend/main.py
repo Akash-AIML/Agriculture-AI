@@ -381,7 +381,15 @@ async def recommend_crop(
         logger.warning("Cache check skipped: %s", e)
 
     try:
-        recs = crop_model_obj.predict(data.dict())
+        recs = crop_model_obj.predict(
+            n=data.N,
+            p=data.P,
+            k=data.K,
+            temperature=data.temperature,
+            humidity=data.humidity,
+            ph=data.ph,
+            rainfall=data.rainfall,
+        )
     except Exception as exc:
         logger.exception("Crop recommendation failed")
         raise HTTPException(status_code=500, detail=f"Inference error: {exc}")
