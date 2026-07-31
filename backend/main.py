@@ -394,7 +394,7 @@ async def recommend_crop(
         logger.exception("Crop recommendation failed")
         raise HTTPException(status_code=500, detail=f"Inference error: {exc}")
 
-    result = {"recommendations": recs}
+    result = recs
     try:
         await cache.set(cache_key, result, ttl=3600)
     except Exception as e:
