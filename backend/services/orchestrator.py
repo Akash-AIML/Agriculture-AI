@@ -226,9 +226,10 @@ class Orchestrator:
         payload: dict,
         rag_service: Optional["RAGService"],
         llm_service: "LLMService",
+        search_service: Optional["WebSearchService"] = None,
     ) -> AsyncGenerator[str, None]:
         """
-        Merges multi-model results, retrieves related knowledge from FAISS,
+        Merges multi-model results, retrieves related knowledge from FAISS or DuckDuckGo,
         and streams the final customized advice from OpenAI.
         """
         # 1. Merge partial results
@@ -240,19 +241,22 @@ class Orchestrator:
         language = payload.get("language", "en")
         context = self.build_llm_context(merged, language=language)
 
-        # 2. Query RAG
+        # 2. Query Search or RAG
         question = payload.get("question") or ""
         query = question or merged.get("summary") or ""
         
-        rag_passages = ""
-        if rag_service and query:
-            rag_passages = rag_service.retrieve(query, top_k=4)
+        reference_knowledge = ""
+        if search_service and query:
+            reference_knowledge = search_service.search(query)
+        elif rag_service and query:
+            reference_knowledge = rag_service.retrieve(query, top_k=4)
 
         # 3. Stream from LLM
         async for chunk in llm_service.stream(
             context=context,
-            rag_passages=rag_passages,
+            rag_passages=reference_knowledge,
             prompt=question,
         ):
             yield chunk
+
 
