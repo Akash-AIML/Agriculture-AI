@@ -243,7 +243,33 @@ class Orchestrator:
 
         # 2. Query Search or RAG
         question = payload.get("question") or ""
-        query = question or merged.get("summary") or ""
+        
+        # Build query for DuckDuckGo search or offline RAG
+        query = ""
+        if question:
+            query = question
+        else:
+            # Construct a clean keyword query from merged analysis results
+            query_parts = []
+            d = merged.get("disease")
+            if d and not d.get("is_healthy"):
+                disease_name = d.get("disease", "").replace("—", " ").strip()
+                if disease_name and disease_name != "Unknown":
+                    query_parts.append(f"{disease_name} treatment")
+            
+            s = merged.get("soil")
+            if s:
+                soil_type = s.get("soil_type", "").strip()
+                if soil_type and soil_type != "Unknown":
+                    query_parts.append(f"{soil_type} characteristics agriculture")
+                    
+            c = merged.get("crop")
+            if c:
+                recommended_crop = c.get("recommended_crop", "").strip()
+                if recommended_crop and recommended_crop != "Unknown":
+                    query_parts.append(f"{recommended_crop} cultivation")
+                    
+            query = " ".join(query_parts) if query_parts else "sustainable farming tips"
         
         reference_knowledge = ""
         if search_service and query:
