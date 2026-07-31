@@ -243,9 +243,19 @@ async def root():
 
 
 # ── Health check ──────────────────────────────────────────────────────────────
-@app.get("/health", response_model=HealthResponse, tags=["system"])
-@app.get("/api/v1/health", response_model=HealthResponse, tags=["system"])
+@app.get("/health", response_model=None, tags=["system"])
+@app.get("/api/v1/health", response_model=None, tags=["system"])
 async def health_check():
+    key_val = os.getenv("OPENAI_API_KEY") or ""
+    key_status = "missing"
+    if key_val:
+        if key_val == "your_openai_api_key_here":
+            key_status = "default_placeholder"
+        else:
+            key_status = f"present (len={len(key_val)}, start={key_val[:4]}...)"
+            
+    base_url_val = os.getenv("OPENAI_BASE_URL") or ""
+
     return {
         "status": "healthy",
         "version": "1.0.0",
@@ -255,6 +265,8 @@ async def health_check():
             "crop":    crop_model_obj is not None and getattr(crop_model_obj, "model", None) is not None,
         },
         "redis_connected": cache._redis_url is not None and cache._backend is not None,
+        "debug_openai_key": key_status,
+        "debug_openai_base_url": base_url_val
     }
 
 
