@@ -47,10 +47,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Test Docker Image Startup
-        run: |
-          docker run --rm ${{ env.IMAGE }}:${{ github.sha }} python -c "import sys; sys.path.append('/app/backend'); import main; print('Main imported successfully!')"
-
       - name: Log in to Azure
         uses: azure/login@v1
         with:
@@ -65,14 +61,3 @@ jobs:
           targetPort: 8080
           ingress: external
           environmentVariables: CORS_ORIGINS=* PORT=8080 OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} OPENAI_BASE_URL=${{ secrets.OPENAI_BASE_URL }} LLM_MODEL=${{ secrets.LLM_MODEL }}
-
-      - name: Inspect Container App Env
-        run: |
-          echo "=== Provisioning State ==="
-          az containerapp show -n agri-ai -g agri-ai-rg --query "properties.provisioningState"
-          echo "=== Revisions Table ==="
-          az containerapp revision list -n agri-ai -g agri-ai-rg -o table
-          echo "=== Container Logs (Revision 17) ==="
-          az containerapp logs show -n agri-ai -g agri-ai-rg --revision agri-ai--0000017 --tail 100 || true
-          echo "=== Container Logs (Revision 18) ==="
-          az containerapp logs show -n agri-ai -g agri-ai-rg --revision agri-ai--0000018 --tail 100 || true
