@@ -60,3 +60,14 @@ jobs:
           targetPort: 8080
           ingress: external
           environmentVariables: CORS_ORIGINS=* PORT=8080 OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} OPENAI_BASE_URL=${{ secrets.OPENAI_BASE_URL }} LLM_MODEL=${{ secrets.LLM_MODEL }}
+
+      - name: Get container startup logs
+        if: always()
+        run: |
+          echo "=== Waiting 30s for container to boot ==="
+          sleep 30
+          echo "=== Revisions ==="
+          az containerapp revision list -n agri-ai -g agri-ai-rg -o table
+          LATEST=$(az containerapp show -n agri-ai -g agri-ai-rg --query "properties.latestRevisionName" -o tsv)
+          echo "=== Logs for $LATEST ==="
+          az containerapp logs show -n agri-ai -g agri-ai-rg --revision "$LATEST" --tail 200 || true
