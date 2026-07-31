@@ -39,6 +39,7 @@ try:
     from services.orchestrator import Orchestrator
     from services.rag_service import RAGService
     from services.llm_service import LLMService
+    from services.search_service import WebSearchService
     from utils.preprocessing import preprocess_image
     from utils.cache import cache
     from middleware.auth import get_current_user, create_token_response, TokenResponse, User
@@ -49,6 +50,7 @@ except ImportError:
     from backend.services.orchestrator import Orchestrator
     from backend.services.rag_service import RAGService
     from backend.services.llm_service import LLMService
+    from backend.services.search_service import WebSearchService
     from backend.utils.preprocessing import preprocess_image
     from backend.utils.cache import cache
     from backend.middleware.auth import get_current_user, create_token_response, TokenResponse, User
@@ -76,13 +78,15 @@ crop_model_obj : Optional[CropModel]    = None
 orchestrator   : Orchestrator           = Orchestrator()
 rag_service    : Optional[RAGService]   = None
 llm_service    : Optional[LLMService]   = None
+search_service : Optional[WebSearchService] = None
 
 RATE_LIMIT = os.getenv("RATE_LIMIT_PER_MINUTE", "30") + "/minute"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global disease_model, soil_model, crop_model_obj, rag_service, llm_service
+    global disease_model, soil_model, crop_model_obj, rag_service, llm_service, search_service
+    search_service = WebSearchService()
 
     # ── Cache ────────────────────────────────────────────────────────────────
     cache._redis_url = os.getenv("REDIS_URL")
@@ -418,9 +422,10 @@ async def get_advice(
 
     try:
         generator = orchestrator.stream_advice(
-            payload     = payload.dict(),
-            rag_service = rag_service,
-            llm_service = llm_service,
+            payload        = payload.dict(),
+            rag_service    = rag_service,
+            llm_service    = llm_service,
+            search_service = search_service,
         )
         return StreamingResponse(generator, media_type="text/event-stream")
     except Exception as exc:
