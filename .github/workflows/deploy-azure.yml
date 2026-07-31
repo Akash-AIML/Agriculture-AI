@@ -47,6 +47,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Test Docker Image Startup
+        run: |
+          docker run --rm ${{ env.IMAGE }}:${{ github.sha }} python -c "import sys; sys.path.append('/app/backend'); import main; print('Main imported successfully!')"
+
       - name: Log in to Azure
         uses: azure/login@v1
         with:
