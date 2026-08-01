@@ -104,6 +104,28 @@ sequenceDiagram
   * **Backbone**: `EfficientNet-B0`.
   * **Capabilities**: Classifies 4 primary soil types (*Alluvial, Black, Clay, Red*).
 
+---
+
+## ❓ Model Selection Justification (Interview / Defense Q&A)
+
+If evaluators ask: *"Why did you choose MobileNetV2 and EfficientNet-B0 instead of larger models like ResNet-50 or ViT?"* — here are your exact technical justifications:
+
+### 1. 🦠 Why MobileNetV2 for Plant Disease Detection?
+* **Depthwise Separable Convolutions**: MobileNetV2 splits standard convolution into depthwise and pointwise operations. This reduces parameters by **~80%** (3.4M params vs 25M+ in ResNet-50) with almost zero loss in accuracy.
+* **Inverted Residuals & Linear Bottlenecks**: Maintains high-frequency spatial features (small leaf spots, rust lesions, powdery mildew textures) even in low-dimensional representations.
+* **Low Latency & Low Memory**: Ideal for CPU-bound cloud containers (Azure) or future offline mobile edge deployment in rural farms with limited internet connectivity.
+
+### 2. 🟤 Why EfficientNet-B0 for Soil Type Classification?
+* **Principle of Compound Scaling**: EfficientNet uniformly scales depth, width, and image resolution together using a mathematical compound coefficient.
+* **Granular Soil Texture Feature Extraction**: Soil identification relies heavily on micro-textures (grain size, color gradients, moisture reflection). EfficientNet’s MBConv blocks capture these multi-scale visual textures better than traditional CNNs.
+* **SOTA Accuracy-to-Parameter Ratio**: Delivers accuracy higher than ResNet-50 while requiring **5x fewer parameters** (~5.3M params) and executing in ~30ms on standard CPUs.
+
+### 3. 🌾 Why CatBoost for Crop Recommendation?
+* **Superior Tabular Data Performance**: Gradient Boosted Decision Trees (GBDTs) consistently outperform Deep Neural Networks on tabular tabular environmental features (N, P, K, pH, rainfall, temp).
+* **Robust Against Overfitting**: CatBoost uses symmetric trees and ordered boosting, preventing target leakage and overfitting on agricultural tabular data.
+
+---
+
 ### 2. Crop Recommendation Classifier
 * **Algorithm**: `CatBoost` gradient-boosted decision trees.
 * **Input Parameters**: Nitrogen (N), Phosphorus (P), Potassium (K), Temperature, Humidity, pH, Rainfall.
