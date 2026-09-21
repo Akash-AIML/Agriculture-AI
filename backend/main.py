@@ -93,8 +93,21 @@ async def lifespan(app: FastAPI):
     await cache.connect()
 
     base_dir = Path(__file__).parent
+
+    def resolve_backend_path(env_var: str, default_rel: str) -> str:
+        val = (os.getenv(env_var) or "").strip()
+        if val:
+            p = Path(val)
+            if p.is_absolute() and p.exists():
+                return str(p)
+            if (base_dir / val).exists():
+                return str(base_dir / val)
+            if p.exists():
+                return str(p)
+        return str(base_dir / default_rel)
+
     disease_model = DiseaseModel(
-        model_path  = os.getenv("DISEASE_MODEL_PATH") or str(base_dir / "models/disease_model_fp16.pth"),
+        model_path  = resolve_backend_path("DISEASE_MODEL_PATH", "models/disease_model_fp16.pth"),
         num_classes = int(os.getenv("DISEASE_NUM_CLASSES", "38")),
     )
     try:
@@ -103,7 +116,7 @@ async def lifespan(app: FastAPI):
         logger.error("Disease model load failed: %s", e)
 
     soil_model = SoilModel(
-        model_path  = os.getenv("SOIL_MODEL_PATH") or str(base_dir / "models/soil_model.pth"),
+        model_path  = resolve_backend_path("SOIL_MODEL_PATH", "models/soil_model.pth"),
         num_classes = int(os.getenv("SOIL_NUM_CLASSES", "4")),
     )
     try:
@@ -112,8 +125,8 @@ async def lifespan(app: FastAPI):
         logger.error("Soil model load failed: %s", e)
 
     crop_model_obj = CropModel(
-        model_path          = os.getenv("CROP_MODEL_PATH") or str(base_dir / "models/crop_model.pkl"),
-        label_encoder_path  = os.getenv("LABEL_ENCODER_PATH") or str(base_dir / "models/label_enoder_crop.pkl"),
+        model_path          = resolve_backend_path("CROP_MODEL_PATH", "models/crop_model.pkl"),
+        label_encoder_path  = resolve_backend_path("LABEL_ENCODER_PATH", "models/label_enoder_crop.pkl"),
     )
     try:
         crop_model_obj.load()
@@ -121,7 +134,7 @@ async def lifespan(app: FastAPI):
         logger.error("Crop model load failed: %s", e)
 
     # ── RAG ──────────────────────────────────────────────────────────────────
-    rag_service = RAGService(docs_dir=os.getenv("RAG_DOCS_DIR", "./rag_docs"))
+    rag_service = RAGService(docs_dir=resolve_backend_path("RAG_DOCS_DIR", "rag_docs"))
 
     # ── LLM ──────────────────────────────────────────────────────────────────
     api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
@@ -256,13 +269,26 @@ async def health_check():
             
     base_url_val = os.getenv("OPENAI_BASE_URL") or ""
 
+    disease_loaded = disease_model is not None and getattr(disease_model, "model", None) is not None
+    soil_loaded = soil_model is not None and getattr(soil_model, "model", None) is not None
+    crop_loaded = crop_model_obj is not None and getattr(crop_model_obj, "model", None) is not None
+
+    disease_is_fallback = type(getattr(disease_model, "model", None)).__name__ == "FallbackDiseaseModel"
+    soil_is_fallback = type(getattr(soil_model, "model", None)).__name__ == "FallbackSoilModel"
+    crop_is_fallback = type(getattr(crop_model_obj, "model", None)).__name__ == "CentroidCropModel"
+
     return {
         "status": "healthy",
         "version": "1.0.0",
         "models_loaded": {
-            "disease": disease_model is not None and getattr(disease_model, "model", None) is not None,
-            "soil":    soil_model is not None and getattr(soil_model, "model", None) is not None,
-            "crop":    crop_model_obj is not None and getattr(crop_model_obj, "model", None) is not None,
+            "disease": disease_loaded and not disease_is_fallback,
+            "soil":    soil_loaded and not soil_is_fallback,
+            "crop":    crop_loaded and not crop_is_fallback,
+        },
+        "models_status": {
+            "disease": "neural_network" if (disease_loaded and not disease_is_fallback) else ("fallback" if disease_loaded else "unloaded"),
+            "soil":    "neural_network" if (soil_loaded and not soil_is_fallback) else ("fallback" if soil_loaded else "unloaded"),
+            "crop":    "catboost" if (crop_loaded and not crop_is_fallback) else ("centroid_fallback" if crop_loaded else "unloaded"),
         },
         "redis_connected": cache._redis_url is not None and cache._backend is not None,
         "debug_openai_key": key_status,

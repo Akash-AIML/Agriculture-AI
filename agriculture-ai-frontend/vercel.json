@@ -5,10 +5,6 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/v1/:path*",
-      "destination": "https://agri-ai.agreeableocean-d133ab66.eastasia.azurecontainerapps.io/api/v1/:path*"
-    },
-    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

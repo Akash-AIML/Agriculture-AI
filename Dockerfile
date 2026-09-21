@@ -20,9 +20,9 @@ COPY backend/ /app/backend/
 
 # Cloud Run injects $PORT (default 8080), HF Spaces uses 7860
 # uvicorn reads it dynamically
-ENV PORT=8080
+ENV PORT=10000
 
-EXPOSE 8080
+EXPOSE 10000
 
 # Use shell form so $PORT is expanded at runtime
 CMD uvicorn backend.main:app --host 0.0.0.0 --port $PORT
